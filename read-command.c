@@ -87,7 +87,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         {
             if (((i+1)== bufferEndIndex) || buffer[i+1] != '&')
             {
-                error(1,0,"dsd");
+                error(1,0,"incorrect AND command");
             }
             typeOfToken=AND_TOKEN;
             i++;
@@ -95,7 +95,18 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         
         else if (buffer[i] == '#') //comment
         {
-            
+            if (i!=0)
+            {
+                if (!(isspace(buffer[i-1])))
+                {
+                     error(1,0,"improper comment declaration");
+                }
+             }
+           
+            while(((i+1)!=bufferEndIndex) && (buffer[i+1] != '\n')){
+                i++;}
+  
+            continue;
         }
         
         else if (buffer[i] == '\n')
@@ -147,7 +158,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
             word[length] = '\0';
             typeOfToken=WORD_TOKEN;
         }
-        else {error(1,0,"dds");}
+        else {error(1,0,"Unrecognizable character");}
         
         token current_token;
         current_token.type=typeOfToken;

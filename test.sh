@@ -1,3 +1,4 @@
-&& | sort
-||
-|
+fdsf #yoo
+whaatup
+#hi
+good
