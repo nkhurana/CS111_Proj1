@@ -1,4 +1,5 @@
 // UCLA CS 111 Lab 1 command interface
+#include "command-internals.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -15,6 +16,9 @@ bool isValidCharacterForWordToken(char character);
 
 char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next_byte_argument, int* bufferEndIndex);
 
+token_node* sanitize_token_stream (token_node* head);
+
+void output_read_error(int line, token node);
 
 /* Create a command stream from GETBYTE and ARG.  A reader of
    the command stream will invoke GETBYTE (ARG) to get the next byte.

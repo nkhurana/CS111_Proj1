@@ -1,11 +1,12 @@
 // UCLA CS 111 Lab 1 command reading
 
 #include "command.h"
-#include "command-internals.h"
+
 #include "alloc.h"
 #include <error.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 bool isValidCharacterForWordToken(char c)
 {
@@ -199,7 +200,11 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         
         itr = itr->next;
     }
-
+	
+	
+	//==============Sanitize token stream===========//
+	sanitize_token_stream(head);
+	puts("Looks good!");
         
         
         
@@ -226,6 +231,190 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     
   //error (1, 0, "command reading not yet implemented");
   //return 0;
+}
+
+
+token_node*
+sanitize_token_stream (token_node* head)
+{
+  // stack substitution for now
+  int paren_count = 0;
+  
+  // for error output
+  int line = 1;
+  
+  bool req_args = false;
+
+  token_type first = head->m_token.type;
+  if (first != WORD_TOKEN && first != NEWLINE_TOKEN
+       && first != AND_TOKEN && first != LEFT_PAREN_TOKEN)
+	output_read_error(line, head->m_token);
+	
+  token_node* it = head;
+  while (it->next != NULL)
+  {
+    token next_token = it->next->m_token;
+    token_type next_type = next_token.type;
+	printf("Current token type = %d\n", it->m_token.type);
+    switch (it->m_token.type)
+	{
+	  case (WORD_TOKEN):
+	  {
+	    if (req_args)
+		  req_args = false;
+		  
+	    if (next_type == LEFT_PAREN_TOKEN)
+		  output_read_error(line, next_token);
+		break;
+	  }
+	  case (PIPE_TOKEN):
+	  case (AND_TOKEN):
+	  case (OR_TOKEN):
+	  {
+	    req_args = true;
+	  }
+	  case (SEMICOLON_TOKEN):
+	  {
+	    if (next_type != WORD_TOKEN && next_type != LEFT_PAREN_TOKEN
+		      && next_type != NEWLINE_TOKEN)
+		  output_read_error(line, next_token);
+		break;
+	  }
+	  case (LEFT_PAREN_TOKEN):
+	  {
+	    if (req_args)
+		  req_args = false;
+		  
+	    paren_count++;
+		if (next_type != WORD_TOKEN && next_type != NEWLINE_TOKEN)
+		  output_read_error(line, next_token);
+		break;
+	  }
+	  case (RIGHT_PAREN_TOKEN):
+	  {
+	    if (paren_count == 0 || next_type == WORD_TOKEN)
+		  output_read_error(line, next_token);
+	    paren_count--;
+		break;
+	  }
+	  case (LESS_TOKEN):
+	  {
+	    // greater than followed by word followed by less than is invalid
+	    if (it->previous != head &&
+		     it->previous->previous->m_token.type == GREATER_TOKEN)
+		  output_read_error(line, next_token);
+	  }
+	  case (GREATER_TOKEN):
+	  {
+	    if (next_type != WORD_TOKEN)
+		  output_read_error(line, next_token);
+		break;
+	  }
+	  case (NEWLINE_TOKEN):
+	  {
+	    if (next_type != LEFT_PAREN_TOKEN && next_type != RIGHT_PAREN_TOKEN
+		      && next_type != WORD_TOKEN && next_type != COMMENT_TOKEN
+			  && next_type != NEWLINE_TOKEN)
+		  output_read_error(line, next_token);
+		
+		line++;
+		break;
+	  }
+	  case (COMMENT_TOKEN):
+	    if (next_type != NEWLINE_TOKEN)
+		  output_read_error(line, next_token);
+	    break;
+	}
+	it = it->next;
+  }
+  
+  // last token
+  token_type last_type = it->m_token.type;
+  if (last_type != WORD_TOKEN)
+  {
+    if (last_type == RIGHT_PAREN_TOKEN)
+	{
+	  if (paren_count == 0)
+	    output_read_error(line, it->m_token);
+	}
+	else if (last_type != SEMICOLON_TOKEN && last_type != NEWLINE_TOKEN)
+	  output_read_error(line, it->m_token);
+  }
+  
+  if (paren_count != 0)
+    error(1, 0, "Line %d: mismatched parentheses", line);
+  
+  if (req_args)
+    error(1, 0, "Line %d: missing argument", line);
+  
+  return head;
+}
+
+void
+output_read_error(int line, token node)
+{
+  char *c = (char *) checked_malloc(80*sizeof(char));
+  c[0] = '\0';
+  
+  switch (node.type)
+  {
+    case (WORD_TOKEN):
+	{
+	  memcpy(c, node.word, 80);
+	  break;
+	}
+	case (PIPE_TOKEN):
+	{
+	  strcat(c, "|");
+	  break;
+	}
+	case (OR_TOKEN):
+	{
+	  strcat(c, "||");
+	  break;
+	}
+	case (AND_TOKEN):
+	{
+	  strcat(c, "&&");
+	  break;
+	}
+	case (SEMICOLON_TOKEN):
+	{
+	  strcat(c, ";");
+	  break;
+	}
+	case (LEFT_PAREN_TOKEN):
+	{
+	  strcat(c, "(");
+	  break;
+	}
+	case (RIGHT_PAREN_TOKEN):
+	{
+	  strcat(c, ")");
+	  break;
+	}
+	case (LESS_TOKEN):
+	{
+	  strcat(c, "<");
+	  break;
+	}
+	case (GREATER_TOKEN):
+	{
+	  strcat(c, ">");
+	  break;
+	}
+	case (NEWLINE_TOKEN):
+	{
+	  strcat(c, "new line");
+	  break;
+	}
+	case (COMMENT_TOKEN):
+	{
+	  strcat(c, "#");
+	  break;
+	}
+  }
+  error(1, 0, "Line %d: syntax '%s'", line, c);
 }
 
 command_t

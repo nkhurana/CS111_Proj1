@@ -35,10 +35,6 @@ struct command
   } u;
 };
 
-
-
-
-
 typedef enum {
     SEMICOLON_TOKEN,
     NEWLINE_TOKEN,
@@ -54,12 +50,12 @@ typedef enum {
 } token_type;
 
 typedef struct token{
-    token_type type;
-    char* word; //NULL if not WORD_TOKEN
+  token_type type;
+  char* word;
 } token;
 
 typedef struct token_node{
-    token m_token;
-    struct token_node* next;
-    struct token_node* previous;
+ token m_token;
+ struct token_node* next;
+ struct token_node* previous;
 } token_node;
