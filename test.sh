@@ -1,1 +1,1 @@
-sort a sort
+(cat a; cat b; cat c) | sort a

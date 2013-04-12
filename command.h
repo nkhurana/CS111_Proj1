@@ -1,10 +1,11 @@
 // UCLA CS 111 Lab 1 command interface
-#include "command-internals.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 
 typedef struct command *command_t;
+typedef struct token token;
+typedef struct token_node token_node;
 
 typedef struct command_stream_t
 {
@@ -16,7 +17,7 @@ bool isValidCharacterForWordToken(char character);
 
 char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next_byte_argument, int* bufferEndIndex);
 
-token_node* sanitize_token_stream (token_node* head);
+bool isSanitized_token_stream (token_node* head);
 
 void output_read_error(int line, token node);
 

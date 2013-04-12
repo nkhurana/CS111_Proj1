@@ -49,13 +49,13 @@ typedef enum {
     PIPE_TOKEN,
 } token_type;
 
-typedef struct token{
+struct token{
   token_type type;
   char* word;
-} token;
+};
 
-typedef struct token_node{
+struct token_node{
  token m_token;
  struct token_node* next;
  struct token_node* previous;
-} token_node;
+};

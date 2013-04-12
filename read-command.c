@@ -1,6 +1,7 @@
 // UCLA CS 111 Lab 1 command reading
 
 #include "command.h"
+#include "command-internals.h"
 
 #include "alloc.h"
 #include <error.h>
@@ -177,7 +178,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         tail = current_token_node;
         
     }
-    
+    /*
     puts("SEMICOLON_TOKEN: 0 \nNEWLINE_TOKEN: 1 \nAND_TOKEN: 2 \nOR_TOKEN: 3 \nGREATER_TOKEN: 4 \nWORD_TOKEN: 5 \nLEFT_PAREN_TOKEN: 6 \nRIGHT_PAREN_TOKEN: 7 \nLESS_TOKEN: 8 \nCOMMENTS_TOKEN: 9 \nPIPE_TOKEN: 10 \nMISC_TOKEN: 11 \n");
     
     //puts(tstream->m_token.words);
@@ -201,10 +202,12 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         itr = itr->next;
     }
 	
-	
+	*/
 	//==============Sanitize token stream===========//
-	sanitize_token_stream(head);
-	puts("Looks good!");
+	if (isSanitized_token_stream(head))
+        puts("Looks good!");
+    
+   
         
         
         
@@ -234,8 +237,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 }
 
 
-token_node*
-sanitize_token_stream (token_node* head)
+bool isSanitized_token_stream (token_node* head)
 {
   // stack substitution for now
   int paren_count = 0;
@@ -347,7 +349,7 @@ sanitize_token_stream (token_node* head)
   if (req_args)
     error(1, 0, "Line %d: missing argument", line);
   
-  return head;
+  return true;
 }
 
 void
