@@ -204,11 +204,20 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	
 	*/
 	//==============Sanitize token stream===========//
-	if (isSanitized_token_stream(head))
-        puts("Looks good!");
+	top_level_command_t c = isSanitized_token_stream(head);
+    puts("Looks good!");
+	puts("\n //============== DEBUG TOP LEVEL COMMANDS =================//\n");
     
-   
-        
+    for (i = 0; i < c.size; i++)
+	{
+	  top_level_command t = c.commands[i];
+	  token_node *itr = t.head;
+	  while(itr != t.tail)
+	  {
+	    printf("%d ", itr->m_token.type);
+	  }
+	  printf("%	d\n", itr->m_token.type);
+	}
         
         
         
@@ -236,23 +245,33 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
   //return 0;
 }
 
-
-bool isSanitized_token_stream (token_node* head)
+top_level_command_t
+isSanitized_token_stream (token_node* head)
 {
+  int max_commands = 50;
+  top_level_command_t c;
+  c.commands = (top_level_command *) checked_malloc(max_commands*sizeof(top_level_command));
+  c.size = 0;
+  
   // stack substitution for now
   int paren_count = 0;
   
   // for error output
   int line = 1;
   
+  // for checking pipes, ors, ands have two args
   bool req_args = false;
+  
+  // for building correct complete commands
+  bool top_level = true;
 
   token_type first = head->m_token.type;
   if (first != WORD_TOKEN && first != NEWLINE_TOKEN
        && first != AND_TOKEN && first != LEFT_PAREN_TOKEN)
 	output_read_error(line, head->m_token);
 	
-  token_node* it = head;
+  token_node *it = head;
+  token_node *command_begin = it;
   while (it->next != NULL)
   {
     token next_token = it->next->m_token;
@@ -280,6 +299,23 @@ bool isSanitized_token_stream (token_node* head)
 	    if (next_type != WORD_TOKEN && next_type != LEFT_PAREN_TOKEN
 		      && next_type != NEWLINE_TOKEN)
 		  output_read_error(line, next_token);
+		  
+		if (top_level)
+		{
+		  top_level_command new;
+		  new.head = command_begin;
+		  new.tail = it->previous;
+		  
+		  if (c.size == max_commands)
+		  {
+		    max_commands *= 2;
+			c.commands = (top_level_command *) checked_realloc(c.commands, (max_commands)*sizeof(top_level_command));
+		  }
+		  
+		  c.commands[c.size] = new;
+		  c.size++;
+		  command_begin = it->next;
+		}
 		break;
 	  }
 	  case (LEFT_PAREN_TOKEN):
@@ -288,6 +324,8 @@ bool isSanitized_token_stream (token_node* head)
 		  req_args = false;
 		  
 	    paren_count++;
+		top_level = false;
+		
 		if (next_type != WORD_TOKEN && next_type != NEWLINE_TOKEN)
 		  output_read_error(line, next_token);
 		break;
@@ -296,7 +334,10 @@ bool isSanitized_token_stream (token_node* head)
 	  {
 	    if (paren_count == 0 || next_type == WORD_TOKEN)
 		  output_read_error(line, next_token);
+		  
 	    paren_count--;
+		top_level = true;
+		
 		break;
 	  }
 	  case (LESS_TOKEN):
@@ -318,6 +359,24 @@ bool isSanitized_token_stream (token_node* head)
 		      && next_type != WORD_TOKEN && next_type != COMMENT_TOKEN
 			  && next_type != NEWLINE_TOKEN)
 		  output_read_error(line, next_token);
+		
+		token_type prev_type = it->previous->m_token.type;
+		if (top_level && !req_args && (prev_type != SEMICOLON_TOKEN && prev_type != NEWLINE_TOKEN))
+		{
+		  top_level_command new;
+		  new.head = command_begin;
+		  new.tail = it->previous;
+		  
+		  if (c.size == max_commands)
+		  {
+		    max_commands *= 2;
+			c.commands = (top_level_command *) checked_realloc(c.commands, (max_commands)*sizeof(top_level_command));
+		  }
+		  
+		  c.commands[c.size] = new;
+		  c.size++;
+		  command_begin = it->next;
+		}
 		
 		line++;
 		break;
@@ -341,19 +400,46 @@ bool isSanitized_token_stream (token_node* head)
 	}
 	else if (last_type != SEMICOLON_TOKEN && last_type != NEWLINE_TOKEN)
 	  output_read_error(line, it->m_token);
+	else
+	{
+	  top_level_command new;
+	  new.head = it;
+	  new.tail = it;
+	
+  	  if (c.size == max_commands)
+      {
+	    max_commands++;
+	    c.commands = (top_level_command *) checked_realloc(c.commands, (max_commands)*sizeof(top_level_command));
+      }
+	
+	  c.commands[c.size] = new;
+	  c.size++;
+	}
   }
   else
   {
     req_args = false;
+    top_level_command new;
+	new.head = it;
+	new.tail = it;
+	
+	if (c.size == max_commands)
+    {
+	  max_commands++;
+	  c.commands = (top_level_command *) checked_realloc(c.commands, (max_commands)*sizeof(top_level_command));
+    }
+	
+	c.commands[c.size] = new;
+	c.size++;
   }
   
   if (paren_count != 0)
-    error(1, 0, "Line %d: mismatched parentheses", line);
+    error(1, 0, "Line %d: unmatched parentheses", line);
   
   if (req_args)
     error(1, 0, "Line %d: missing argument", line);
   
-  return true;
+  return c;
 }
 
 void

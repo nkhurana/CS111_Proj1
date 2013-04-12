@@ -7,17 +7,30 @@ typedef struct command *command_t;
 typedef struct token token;
 typedef struct token_node token_node;
 
-typedef struct command_stream_t
+typedef struct
 {
-    int size;
-}command_stream_t;
+  command_t* commands;
+  command_t it;
+  int size;
+} command_stream_t;
 
+typedef struct 
+{
+  token_node* head;
+  token_node* tail;
+} top_level_command;
+
+typedef struct
+{
+  top_level_command* commands;
+  int size;
+} top_level_command_t;
 
 bool isValidCharacterForWordToken(char character);
 
 char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next_byte_argument, int* bufferEndIndex);
 
-bool isSanitized_token_stream (token_node* head);
+top_level_command_t isSanitized_token_stream (token_node* head);
 
 void output_read_error(int line, token node);
 
