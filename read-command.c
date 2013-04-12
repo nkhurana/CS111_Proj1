@@ -208,6 +208,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     puts("Looks good!");
 	puts("\n //============== DEBUG TOP LEVEL COMMANDS =================//\n");
     
+
     for (i = 0; i < c.size; i++)
 	{
 	  top_level_command t = c.commands[i];
@@ -218,6 +219,8 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  }
 	  printf("%	d\n", itr->m_token.type);
 	}
+
+
         
         
         
@@ -508,6 +511,202 @@ output_read_error(int line, token node)
   }
   error(1, 0, "Line %d: syntax '%s'", line, c);
 }
+
+
+
+
+
+
+
+
+
+
+
+command_t CreateCommand(token_node* head, token_node* tail)
+{
+    //BASE CASE: simple command is one word
+    if (head == tail)
+    {
+        command_t command = checked_malloc(sizeof(command_t));
+        command->type = SIMPLE_COMMAND;
+        command->status=-1;
+        command->input = NULL;
+        command->output=NULL;
+        command->u.word = checkedmalloc(sizeof(char*));
+        u.word[0] = head->m_token->word;
+        return command;
+    }
+
+    token_node* itr = head;
+    int totalNodes=0;
+    int numWordNodes=0;
+    int AND_index_placeholder = 0;
+    int OR_index_placeholder = 0;
+    
+    token_node* ptr_to_AND_Token = NULL;
+    token_node* ptr_to_OR_Token = NULL;
+    token_node* ptr_to_PIPE_Token = NULL;
+    
+    while ((itr != tail->next))
+    {
+        
+        
+        if (itr->m_token.type == PIPE_COMMAND)
+        {
+            ptr_to_PIPE_Token = itr;
+        }
+        
+        if (itr->m_token.type == AND_TOKEN)
+        {
+            
+            ptr_to_AND_Token = itr;
+            AND_index_placeholder=totalNodes;
+        }
+        
+        if (itr->m_token.type == OR_TOKEN)
+        {
+            
+            ptr_to_OR_Token = itr;
+            OR_index_placeholder=totalNodes;
+        }
+        
+        if (itr->m_token.type == WORD_TOKEN)
+        {
+            numWordNodes++;
+            
+        }
+        totalNodes++;
+        itr = itr->next;
+    }
+    //BASE CASE: simple command is multiple words
+    if (totalNodes==numWordNodes) 
+    {
+        command_t command = checked_malloc(sizeof(command_t));
+        command->type = SIMPLE_COMMAND;
+        command->status=-1;
+        command->input = NULL;
+        command->output=NULL;
+        command->u.word = checkedmalloc((sizeof(char*))*numWordNodes);
+        itr = head;
+        int index = 0;
+        while ((itr != tail->next))
+        {
+            u.word[index] = itr->m_token->word;
+            index++;
+            itr = itr->next;
+        }
+
+        return command;
+    }
+    
+    
+    //PIPE COMMAND
+    
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (ptr_to_PIPE_Token))
+    {
+        command_t command = checked_malloc(sizeof(command_t));
+        command->type = PIPE_COMMAND;
+        command->status=-1;
+        command->input = NULL;
+        command->output=NULL;
+        
+        command->u.command[0] = CreateCommand(head, ptr_to_PIPE_Token->previous);
+        command->u.command[1] = CreateCommand(ptr_to_PIPE_Token->next,tail);
+        return command;
+        
+        
+    }
+    
+    
+    
+    
+    
+    
+    //AND COMMAND
+    
+    if ((ptr_to_And_Token) && (AND_index_placeholder>OR_index_placeholder))
+    {
+        command_t command = checked_malloc(sizeof(command_t));
+        command->type = AND_COMMAND;
+        command->status=-1;
+        command->input = NULL;
+        command->output=NULL;
+        
+        
+        
+        command->u.command[0] = CreateCommand(head, ptr_to_AND_Token->previous);
+        command->u.command[1] = CreateCommand(ptr_to_And_Token->next,tail);
+        return command;
+    }
+    
+    //OR COMMAND
+    if ((ptr_to_Or_Token) && (OR_index_placeholder>AND_index_placeholder))
+    {
+        command_t command = checked_malloc(sizeof(command_t));
+        command->type = OR_COMMAND;
+        command->status=-1;
+        command->input =NULL;
+        command->output=NULL;
+        
+        
+        
+        command->u.command[0] = CreateCommand(head, ptr_to_OR_Token->previous);
+        command->u.command[1] = CreateCommand(ptr_to_Or_Token->next,tail);
+        return command;
+    }
+        
+            
+        
+    
+    
+    
+    
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 command_t
 read_command_stream (command_stream_t s)

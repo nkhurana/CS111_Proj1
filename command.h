@@ -26,6 +26,9 @@ typedef struct
   int size;
 } top_level_command_t;
 
+command_t CreateCommand(token_node* head, token_node* tail);
+
+
 bool isValidCharacterForWordToken(char character);
 
 char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next_byte_argument, int* bufferEndIndex);
