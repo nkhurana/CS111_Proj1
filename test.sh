@@ -1,1 +1,4 @@
-(cat a; cat b; cat c) | sort a
+a&&b||
+c &&
+d | e && f|
+g<h
