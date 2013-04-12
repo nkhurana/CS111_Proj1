@@ -179,8 +179,8 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         
     }
     /*
-    puts("SEMICOLON_TOKEN: 0 \nNEWLINE_TOKEN: 1 \nAND_TOKEN: 2 \nOR_TOKEN: 3 \nGREATER_TOKEN: 4 \nWORD_TOKEN: 5 \nLEFT_PAREN_TOKEN: 6 \nRIGHT_PAREN_TOKEN: 7 \nLESS_TOKEN: 8 \nCOMMENTS_TOKEN: 9 \nPIPE_TOKEN: 10 \nMISC_TOKEN: 11 \n");
-    
+    puts("SEMICOLON_TOKEN: 0 \nNEWLINE_TOKEN: 1 \nAND_TOKEN: 2 \nOR_TOKEN: 3 \nGREATER_TOKEN: 4 \nWORD_TOKEN: 5 \nLEFT_PAREN_TOKEN: 6 \nRIGHT_PAREN_TOKEN: 7 \nLESS_TOKEN: 8 \nCOMMENTS_TOKEN: 9 \nPIPE_TOKEN: 10 \nMISC_TOKEN: 11 \n");*/
+    /*
     //puts(tstream->m_token.words);
     token_node* itr = head;
     while (itr != NULL)
@@ -208,7 +208,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     puts("Looks good!");
 	puts("\n //============== DEBUG TOP LEVEL COMMANDS =================//\n");
     
-
+    
     for (i = 0; i < c.size; i++)
 	{
 	  top_level_command t = c.commands[i];
@@ -220,6 +220,9 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  }
 	  printf("%d\n", itr->m_token.type);
 	}
+    
+    //command_t command = CreateCommand(t.head, t.tail);
+    
 
 
         
@@ -522,7 +525,7 @@ output_read_error(int line, token node)
 
 
 
-
+/*
 command_t CreateCommand(token_node* head, token_node* tail)
 {
     //BASE CASE: simple command is one word
@@ -667,7 +670,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
 }
 
 
-
+*/
 
 
 

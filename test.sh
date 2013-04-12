@@ -1,1 +1,2 @@
 cat a
+cat b
