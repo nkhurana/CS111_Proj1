@@ -216,8 +216,9 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  while(itr != t.tail)
 	  {
 	    printf("%d ", itr->m_token.type);
+		itr = t.head->next;
 	  }
-	  printf("%	d\n", itr->m_token.type);
+	  printf("%d\n", itr->m_token.type);
 	}
 
 
@@ -406,8 +407,8 @@ isSanitized_token_stream (token_node* head)
 	else
 	{
 	  top_level_command new;
-	  new.head = it;
-	  new.tail = it;
+	  new.head = command_begin;
+	  new.tail = it->previous;
 	
   	  if (c.size == max_commands)
       {
