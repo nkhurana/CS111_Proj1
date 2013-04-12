@@ -427,7 +427,7 @@ isSanitized_token_stream (token_node* head)
   {
     req_args = false;
     top_level_command new;
-	new.head = it;
+	new.head = command_begin;
 	new.tail = it;
 	
 	if (c.size == max_commands)
