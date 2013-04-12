@@ -342,6 +342,10 @@ bool isSanitized_token_stream (token_node* head)
 	else if (last_type != SEMICOLON_TOKEN && last_type != NEWLINE_TOKEN)
 	  output_read_error(line, it->m_token);
   }
+  else
+  {
+    req_args = false;
+  }
   
   if (paren_count != 0)
     error(1, 0, "Line %d: mismatched parentheses", line);
