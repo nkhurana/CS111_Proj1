@@ -253,7 +253,8 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     //puts((command->u.word)[0]);
     //puts((command->u.word)[1]);
     //puts((command->u.word)[2]);
-    //printf("pointer address:%p \n",(&(command->u.word)[0]));
+    //printf("pointer address:%p \n",(command->u.word)[2]);
+    //printf("pointer address:%p \n",(command->u.word)[5]);
     //printf("pointer address:%p",(&(command->u.word)[1]));
     //printf("string:%s",((command->u.word)[3]));
     print_command(command);
@@ -362,20 +363,26 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
-        int it = (sizeof(char*))*totalNodes;
-        //printf("size: %i", it);
+        int it = (sizeof(char*))*numWordNodes;
+        printf("size: %i \n", it);
         
-        command->u.word = checked_malloc((sizeof(char*))*numWordNodes);
+        command->u.word = (char**)checked_malloc((sizeof(char*))*numWordNodes);
         itr = head;
         int index = 0;
-        while ((itr != tail->next))
+        printf("pointer address:%p \n",(command->u.word)[0]);
+        printf("pointer address:%p \n",(command->u.word)[1]);
+        printf("pointer address:%p \n",(command->u.word)[2]);
+        printf("pointer address:%p \n",(command->u.word)[5]);
+        
+        
+        /*while ((itr != tail->next))
         {
-            (command->u.word)[index] = itr->m_token.word;
-            index++;
+            (command->u.word)[index++] = itr->m_token.word;
+            //index++;
             //puts(itr->m_token.word);
             //puts("\n");
             itr = itr->next;
-        }
+        }*/
         //printf("index #:%i \n", index);
         
         
