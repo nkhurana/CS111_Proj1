@@ -242,9 +242,9 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     command_t command = CreateCommand(t.head, t.tail);
     // testing github
     
-    if (command->u.word[3])
-        puts("NO!");
-    puts(command->u.word[2]);
+    //if (command->u.word[3])
+      //  puts("NO!");
+    //puts(command->u.word[2]);
     
     
     //if (command->u.word[2])
@@ -356,14 +356,14 @@ command_t CreateCommand(token_node* head, token_node* tail)
     //BASE CASE: simple command is multiple words
     if (totalNodes==numWordNodes) 
     {
-        printf("total #:%i \n", totalNodes);
+        //printf("total #:%i \n", totalNodes);
         command_t command = checked_malloc(sizeof(struct command));
         command->type = SIMPLE_COMMAND;
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
         int it = (sizeof(char*))*totalNodes;
-        printf("size: %i", it);
+        //printf("size: %i", it);
         
         command->u.word = checked_malloc((sizeof(char*))*numWordNodes);
         itr = head;
@@ -376,7 +376,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
             //puts("\n");
             itr = itr->next;
         }
-        printf("index #:%i \n", index);
+        //printf("index #:%i \n", index);
         
         
         return command;
