@@ -4,15 +4,16 @@
 #include <stdio.h>
 
 typedef struct command *command_t;
+typedef struct command_stream *command_stream_t;
 typedef struct token token;
 typedef struct token_node token_node;
 
-typedef struct
+struct command_stream
 {
   command_t* commands;
   command_t it;
   int size;
-} command_stream_t;
+};
 
 typedef struct 
 {

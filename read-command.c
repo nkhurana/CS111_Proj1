@@ -53,12 +53,13 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     
     //TOKENIZE THE CHARACTER BUFFER AND CONSTRUCT TOKEN_NODE
     
-    command_stream_t fake;
-    fake.size = 1;
+    command_stream_t cstream =(command_stream_t) checked_malloc(sizeof(struct command_stream));
+    cstream->size = 0;
     //ensure file wasn't empty
     if(bufferEndIndex == 0)
     {
-        return fake; //REPLACE W/ PROPER CODE
+		cstream->it = NULL;
+        return cstream; //REPLACE W/ PROPER CODE
     }
     
     token_node *head=NULL;
@@ -227,9 +228,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         PIPE_TOKEN,
     } token_type;*/
     
-	command_stream_t cstream;
-	cstream.commands = (command_t *) checked_malloc(100*sizeof(command_t *));
-	cstream.size = 0;
+	cstream->commands = (command_t *) checked_malloc(100*sizeof(command_t *));
 	
     for (i = 0; i < c.size; i++)
 	{
@@ -244,14 +243,12 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  printf("%d\n", itr->m_token.type);
 	  
 	  command_t command = CreateCommand(t.head, t.tail);
-	  cstream.commands[cstream.size] = command;
-	  //print_command(command);
-	  
-	  if (i == 0)
-	  	cstream.it = cstream.commands[0];
-		
-	  cstream.size++;
+	  (cstream->commands)[cstream->size] = command;
+
+	  cstream->size++;
 	}
+	(cstream->commands)[cstream->size] = NULL;
+	cstream->it = (cstream->commands)[0];
     
     
     //int it = sizeof(command);
@@ -1049,7 +1046,7 @@ output_read_error(int line, token node)
 command_t
 read_command_stream (command_stream_t s)
 {
-  command_t c = s.it;
-  (s.it)++;
+  command_t c = s->it;
+  (s->it)++;
   return c;
 }

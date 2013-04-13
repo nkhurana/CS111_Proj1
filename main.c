@@ -77,7 +77,7 @@ free_command(command_t c)
 void
 free_command_stream()
 {
-  command_stream_t *it = free_list[COMMAND_STREAM];
+  command_stream_t it = free_list[COMMAND_STREAM];
   command_t *c = it->commands;
   int i;
   for (i = 0; i < it->size; i++)
@@ -117,7 +117,7 @@ main (int argc, char **argv)
     make_command_stream (get_next_byte, script_stream); //PART 1A
  
   command_t last_command = NULL;
-  command_t command;/*
+  command_t command;
   while ((command = read_command_stream (command_stream))) //PART 1A
     {
     if (print_tree)
@@ -131,7 +131,7 @@ main (int argc, char **argv)
 	  execute_command (command, time_travel);
 	}
     }
-*/
+
   //free_token_stream();
   //free_top_level_command();
   // free_command_stream();
