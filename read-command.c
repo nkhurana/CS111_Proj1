@@ -407,10 +407,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
                 numWordNodes++;
             }
         
-            if (itr->m_token.type == NEWLINE_TOKEN)
-            {
-                numNewlines++;
-            }
+
             totalNodes++;
         }
         itr = itr->next;
@@ -430,7 +427,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     
     //BASE CASE: simple command is multiple words
-    if (totalNodes==(numWordNodes+numNewlines)) 
+    if (totalNodes==(numWordNodes))
     {
         //printf("total #:%i \n", totalNodes);
         command_t command = checked_malloc(sizeof(struct command));
@@ -475,7 +472,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
             command->type = SUBSHELL_COMMAND;
             command->status = -1;
             int subshell_balancing_internal = 1;
-            token_node *itr_To_Left_Paren = ptr_to_LESSTHAN_Token->previous);
+            token_node *itr_To_Left_Paren = (ptr_to_LESSTHAN_Token->previous);
             while (itr_To_Left_Paren!=NULL && subshell_balancing_internal!=0)
             {
                 if (itr_To_Left_Paren->m_token.type == RIGHT_PAREN_TOKEN)
@@ -518,6 +515,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
             command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
             return command;
         }
+    }
     
     //basic redirection w/ only >
     if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(!ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
