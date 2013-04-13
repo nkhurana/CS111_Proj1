@@ -2,12 +2,13 @@
 
 #include "command.h"
 #include "command-internals.h"
-
 #include "alloc.h"
+
 #include <error.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 bool isValidCharacterForWordToken(char c)
 {
@@ -160,7 +161,11 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
             word[length] = '\0';
             typeOfToken=WORD_TOKEN;
         }
-        else {error(1,0,"Unrecognizable character");}
+        else
+		{
+		  free(word);
+		  error(1,0,"Unrecognizable character");
+		}
         
         token current_token;
         current_token.type=typeOfToken;
@@ -204,6 +209,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	
 	*/
 	//==============Sanitize token stream===========//
+	free_list[TOKEN_STREAM] = head;
 	top_level_command_t c = isSanitized_token_stream(head);
     puts("Looks good!");
 	puts("\n //============== DEBUG TOP LEVEL COMMANDS =================//\n");
@@ -224,6 +230,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     for (i = 0; i < c.size; i++)
 	{
 	  top_level_command t = c.commands[i];
+	  remove_newline_tokens(t);
 	  token_node *itr = t.head;
 	  while(itr != t.tail)
 	  {
@@ -455,25 +462,13 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 top_level_command_t
 isSanitized_token_stream (token_node* head)
 {
   int max_commands = 50;
   top_level_command_t c;
   c.commands = (top_level_command *) checked_malloc(max_commands*sizeof(top_level_command));
+  free_list[TOP_LEVEL_COMMAND] = c.commands;
   c.size = 0;
   
   // stack substitution for now
@@ -488,7 +483,7 @@ isSanitized_token_stream (token_node* head)
   // for building correct complete commands
   bool top_level = true;
   
-  bool redirection = true;
+  bool redirection = false;
 
   token_type first = head->m_token.type;
   if (first != WORD_TOKEN && first != NEWLINE_TOKEN
@@ -508,7 +503,10 @@ isSanitized_token_stream (token_node* head)
 	  {
 	    if (req_args)
 		  req_args = false;
-		if (redirection)
+		if (it != head && redirection &&
+			 (it->previous->m_token.type == GREATER_TOKEN
+			 || (it->previous->m_token.type == LESS_TOKEN
+			      && next_type != GREATER_TOKEN)))
 		  redirection = false;
 		  
 	    if (next_type == LEFT_PAREN_TOKEN)
@@ -629,16 +627,14 @@ isSanitized_token_stream (token_node* head)
   token_type last_type = it->m_token.type;
   if (last_type != WORD_TOKEN)
   {
-    if (last_type == RIGHT_PAREN_TOKEN)
-	{
-	  paren_count--;
-	  if (paren_count == 0)
-	    output_read_error(line, it->m_token);
-	}
-	else if (last_type != SEMICOLON_TOKEN && last_type != NEWLINE_TOKEN)
+	if (last_type != SEMICOLON_TOKEN && last_type != NEWLINE_TOKEN 
+			  && last_type != RIGHT_PAREN_TOKEN)
 	  output_read_error(line, it->m_token);
 	else
 	{
+	  if (last_type == RIGHT_PAREN_TOKEN)
+		paren_count--;
+	  
 	  top_level_command new;
 	  new.head = command_begin;
 	  new.tail = it->previous;
@@ -680,9 +676,29 @@ isSanitized_token_stream (token_node* head)
 }
 
 void
+remove_newline_tokens(top_level_command c)
+{
+  token_node *it = c.head;
+  while(it != c.tail)
+  {
+    if (it->m_token.type != NEWLINE_TOKEN)
+	{
+	  it = it->next;
+	  continue;
+	}
+	
+	token_node *r = it;
+	it->previous->next = it->next;
+	it->next->previous = it->previous;
+	it = it->next;
+	free(r);
+  }
+}
+
+void
 output_read_error(int line, token node)
 {
-  char *c = (char *) checked_malloc(80*sizeof(char));
+  char c[80];
   c[0] = '\0';
   
   switch (node.type)

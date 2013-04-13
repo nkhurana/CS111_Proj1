@@ -77,4 +77,11 @@ struct token_node{
  struct token_node* previous;
 };
 
-
+enum free_type
+  {
+    TOKEN_STREAM,
+	TOP_LEVEL_COMMAND,
+	COMMAND_STREAM,
+  };
+  
+extern void *free_list[3];

@@ -28,12 +28,13 @@ typedef struct
 
 command_t CreateCommand(token_node* head, token_node* tail);
 
-
 bool isValidCharacterForWordToken(char character);
 
 char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next_byte_argument, int* bufferEndIndex);
 
 top_level_command_t isSanitized_token_stream (token_node* head);
+
+void remove_newline_tokens(top_level_command c);
 
 void output_read_error(int line, token node);
 
