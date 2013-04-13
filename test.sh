@@ -1,1 +1,2 @@
-please c work a n
+(a b c) (a)
+

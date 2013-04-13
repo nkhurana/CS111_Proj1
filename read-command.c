@@ -314,55 +314,123 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
-        command->u.word = checked_malloc(sizeof(char*));
+        command->u.word = checked_malloc(sizeof(char*)*2);
         *(command->u.word) = head->m_token.word;
+        (command->u.word)[1] = NULL;
         //puts(head->m_token.word);
         return command;
     }
     
     token_node* itr = head;
     int totalNodes=0;
+    int numNewlines=0;
     int numWordNodes=0;
+    int numWordsBeforeRedirection = 0;
     int AND_index_placeholder = 0;
     int OR_index_placeholder = 0;
+    
+    
+    int LESSTHAN_index_placeholder=0;
+    int GREATERTHAN_index_placeholder=0;
     
     token_node* ptr_to_AND_Token = NULL;
     token_node* ptr_to_OR_Token = NULL;
     token_node* ptr_to_PIPE_Token = NULL;
     
+    token_node* ptr_to_LESSTHAN_Token = NULL;
+    token_node* ptr_to_GREATERTHAN_Token = NULL;
+    
+    bool SubshellSpotted = false;
+    int Subshell_balancing = 0; //+ for every ( ; - for every )
+    
+    
+    
+    
     while ((itr != tail->next))
     {
         
-        
-        if (itr->m_token.type == PIPE_TOKEN)
+        if (itr->m_token.type ==LEFT_PAREN_TOKEN)
         {
-            ptr_to_PIPE_Token = itr;
+            SubshellSpotted=true;
+            Subshell_balancing++;
+        }
+        if (itr->m_token.type ==RIGHT_PAREN_TOKEN)
+        {
+            SubshellSpotted=true;
+            Subshell_balancing--;
         }
         
-        if (itr->m_token.type == AND_TOKEN)
+        
+        
+        if (Subshell_balancing==0) //not within subshell
         {
+            if ((!ptr_to_GREATERTHAN_Token) && (!ptr_to_LESSTHAN_Token))
+            {
+                numWordsBeforeRedirection++;
+            }
+        
+        
+            if (itr->m_token.type== LESS_TOKEN)
+            {
+                ptr_to_LESSTHAN_Token = itr;
+                LESSTHAN_index_placeholder=totalNodes;
+            }
+        
+        
+            if (itr->m_token.type== GREATER_TOKEN)
+            {
+                ptr_to_GREATERTHAN_Token = itr;
+                GREATERTHAN_index_placeholder=totalNodes;
+            }
+        
+            if (itr->m_token.type == PIPE_TOKEN)
+            {
+                ptr_to_PIPE_Token = itr;
+            }   
+        
+            if (itr->m_token.type == AND_TOKEN)
+            {
             
-            ptr_to_AND_Token = itr;
-            AND_index_placeholder=totalNodes;
-        }
+                ptr_to_AND_Token = itr;
+                AND_index_placeholder=totalNodes;
+            }
         
-        if (itr->m_token.type == OR_TOKEN)
-        {
+            if (itr->m_token.type == OR_TOKEN)
+            {
             
-            ptr_to_OR_Token = itr;
-            OR_index_placeholder=totalNodes;
-        }
+                ptr_to_OR_Token = itr;
+                OR_index_placeholder=totalNodes;
+            }
         
-        if (itr->m_token.type == WORD_TOKEN)
-        {
-            numWordNodes++;
-            
+            if (itr->m_token.type == WORD_TOKEN)
+            {
+                numWordNodes++;
+            }
+        
+            if (itr->m_token.type == NEWLINE_TOKEN)
+            {
+                numNewlines++;
+            }
+            totalNodes++;
         }
-        totalNodes++;
         itr = itr->next;
     }
+    
+    
+    if ((SubshellSpotted) && (!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&& (!ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token))
+    {
+        command_t command = checked_malloc(sizeof(struct command));
+        command->type = SUBSHELL_COMMAND;
+        command->status=-1;
+        command->input = NULL;
+        command->output=NULL;
+        command->u.subshell_command = CreateCommand(head->next,tail->previous);
+        return command;
+    }
+    
+    
     //BASE CASE: simple command is multiple words
-    if (totalNodes==numWordNodes) 
+    if (totalNodes==(numWordNodes+numNewlines)) 
     {
         //printf("total #:%i \n", totalNodes);
         command_t command = checked_malloc(sizeof(struct command));
@@ -373,30 +441,155 @@ command_t CreateCommand(token_node* head, token_node* tail)
         int it = (sizeof(char*))*numWordNodes;
         printf("size: %i \n", it);
         
-        command->u.word = (char**)checked_malloc((sizeof(char*))*numWordNodes);
+        command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordNodes+1));
         itr = head;
         int index = 0;
-        printf("pointer address:%p \n",(command->u.word)[0]);
-        printf("pointer address:%p \n",(command->u.word)[1]);
-        printf("pointer address:%p \n",(command->u.word)[2]);
-        printf("pointer address:%p \n",(command->u.word)[5]);
-        
-        
-        /*while ((itr != tail->next))
+    
+        while ((itr != tail->next))
         {
-            (command->u.word)[index++] = itr->m_token.word;
-            //index++;
-            //puts(itr->m_token.word);
-            //puts("\n");
+            if (itr->m_token.type == WORD_TOKEN)
+            {
+                (command->u.word)[index++] = itr->m_token.word;
+                //puts(itr->m_token.word);
+                //puts("\n");
+            }
             itr = itr->next;
-        }*/
+        }
         //printf("index #:%i \n", index);
+        (command->u.word)[index] = NULL;
+        
         
         
         return command;
     }
     
-    /*
+    
+    
+    //basic redirection w/ only <
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token))
+    {
+        
+        if (ptr_to_LESSTHAN_Token->previous->m_token.type == RIGHT_PAREN_TOKEN)
+        {
+            command_t command = checked_malloc(sizeof(struct command));
+            command->type = SUBSHELL_COMMAND;
+            command->status = -1;
+            int subshell_balancing_internal = 1;
+            token_node *itr_To_Left_Paren = ptr_to_LESSTHAN_Token->previous);
+            while (itr_To_Left_Paren!=NULL && subshell_balancing_internal!=0)
+            {
+                if (itr_To_Left_Paren->m_token.type == RIGHT_PAREN_TOKEN)
+                    subshell_balancing_internal++;
+                if (itr_To_Left_Paren->m_token.type == LEFT_PAREN_TOKEN)
+                    subshell_balancing_internal--;
+                itr_To_Left_Paren=itr_To_Left_Paren->previous;
+            }
+            itr_To_Left_Paren=itr_To_Left_Paren->next;
+            command->u.subshell_command=CreateCommand(itr_To_Left_Paren->next, ptr_to_LESSTHAN_Token->previous->previous);
+            command->output = NULL;
+            command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
+            return command;
+            
+        }
+        else
+        {        
+            command_t command = checked_malloc(sizeof(struct command));
+            command->type = SIMPLE_COMMAND;
+            command ->status = -1;
+        
+            command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordsBeforeRedirection+1));
+            itr = head;
+            int index = 0;
+        
+            while ((itr != ptr_to_LESSTHAN_Token))
+            {
+                if (itr->m_token.type == WORD_TOKEN)
+                {
+                    (command->u.word)[index++] = itr->m_token.word;
+                    //puts(itr->m_token.word);
+                    //puts("\n");
+                }
+                itr = itr->next;
+            }
+            //printf("index #:%i \n", index);
+            (command->u.word)[index] = NULL;
+            command->output = NULL;
+        
+            command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
+            return command;
+        }
+    
+    //basic redirection w/ only >
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(!ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
+    {
+        //puts("HE:");
+        command_t command = checked_malloc(sizeof(struct command));
+        command->type = SIMPLE_COMMAND;
+        command ->status = -1;
+        
+        command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordsBeforeRedirection+1));
+        itr = head;
+        int index = 0;
+        
+        while ((itr != ptr_to_GREATERTHAN_Token))
+        {
+            if (itr->m_token.type == WORD_TOKEN)
+            {
+                (command->u.word)[index++] = itr->m_token.word;
+                //puts(itr->m_token.word);
+                //puts("\n");
+            }
+            itr = itr->next;
+        }
+        //printf("index #:%i \n", index);
+        (command->u.word)[index] = NULL;
+        command ->input = NULL;
+        command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
+        return command;
+        
+    }
+    
+    //redirection w/ (command) < word > word
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
+    {
+        command_t command = checked_malloc(sizeof(struct command));
+        command->type = SIMPLE_COMMAND;
+        command ->status = -1;
+        
+        command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordsBeforeRedirection+1));
+        itr = head;
+        int index = 0;
+        
+        while ((itr != ptr_to_LESSTHAN_Token))
+        {
+            if (itr->m_token.type == WORD_TOKEN)
+            {
+                (command->u.word)[index++] = itr->m_token.word;
+                //puts(itr->m_token.word);
+                //puts("\n");
+            }
+            itr = itr->next;
+        }
+        //printf("index #:%i \n", index);
+        (command->u.word)[index] = NULL;
+        command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
+        command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
+        return command;
+        
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     //PIPE COMMAND
     
     if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (ptr_to_PIPE_Token))
@@ -406,7 +599,6 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
-        
         command->u.command[0] = CreateCommand(head, ptr_to_PIPE_Token->previous);
         command->u.command[1] = CreateCommand(ptr_to_PIPE_Token->next,tail);
         return command;
@@ -445,8 +637,6 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->input =NULL;
         command->output=NULL;
         
-        
-        
         command->u.command[0] = CreateCommand(head, ptr_to_OR_Token->previous);
         command->u.command[1] = CreateCommand(ptr_to_OR_Token->next,tail);
         return command;
@@ -455,7 +645,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     
     
-    */
+    
     
     
     
