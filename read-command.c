@@ -357,7 +357,8 @@ isSanitized_token_stream (token_node* head)
 	  case (LESS_TOKEN):
 	  {
 	    // greater than followed by word followed by less than is invalid
-	    if (redirection)
+	    if (redirection || (it->previous != head
+		     && it->previous->previous->m_token.type == GREATER_TOKEN))
 		  output_read_error(line, next_token);
 	  }
 	  case (GREATER_TOKEN):
@@ -414,6 +415,7 @@ isSanitized_token_stream (token_node* head)
   {
     if (last_type == RIGHT_PAREN_TOKEN)
 	{
+	  paren_count--;
 	  if (paren_count == 0)
 	    output_read_error(line, it->m_token);
 	}
