@@ -821,13 +821,16 @@ isSanitized_token_stream (token_node* head)
 			  && last_type != RIGHT_PAREN_TOKEN)
 	  output_read_error(line, it->m_token);
 	else
-	{
-	  if (last_type == RIGHT_PAREN_TOKEN)
-		paren_count--;
-	  
+	{ 
 	  top_level_command new;
 	  new.head = command_begin;
 	  new.tail = it->previous;
+	  
+	  if (last_type == RIGHT_PAREN_TOKEN)
+	  {
+	    new.tail = it;
+		paren_count--;
+	  }
 	
   	  if (c.size == max_commands)
       {
