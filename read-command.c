@@ -472,16 +472,16 @@ command_t CreateCommand(token_node* head, token_node* tail)
             command->type = SUBSHELL_COMMAND;
             command->status = -1;
             int subshell_balancing_internal = 1;
-            token_node *itr_To_Left_Paren = (ptr_to_LESSTHAN_Token->previous);
+            token_node *itr_To_Left_Paren = (ptr_to_LESSTHAN_Token->previous->previous);
             while (itr_To_Left_Paren!=NULL && subshell_balancing_internal!=0)
             {
                 if (itr_To_Left_Paren->m_token.type == RIGHT_PAREN_TOKEN)
                     subshell_balancing_internal++;
                 if (itr_To_Left_Paren->m_token.type == LEFT_PAREN_TOKEN)
                     subshell_balancing_internal--;
-                itr_To_Left_Paren=itr_To_Left_Paren->previous;
+                if (subshell_balancing_internal!=0)
+                    itr_To_Left_Paren=itr_To_Left_Paren->previous;
             }
-            itr_To_Left_Paren=itr_To_Left_Paren->next;
             command->u.subshell_command=CreateCommand(itr_To_Left_Paren->next, ptr_to_LESSTHAN_Token->previous->previous);
             command->output = NULL;
             command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
@@ -520,7 +520,29 @@ command_t CreateCommand(token_node* head, token_node* tail)
     //basic redirection w/ only >
     if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(!ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
     {
-        //puts("HE:");
+        if (ptr_to_GREATERTHAN_Token->previous->m_token.type == RIGHT_PAREN_TOKEN)
+        {
+            command_t command = checked_malloc(sizeof(struct command));
+            command->type = SUBSHELL_COMMAND;
+            command->status = -1;
+            int subshell_balancing_internal = 1;
+            token_node *itr_To_Left_Paren = (ptr_to_GREATERTHAN_Token->previous->previous);
+            while (itr_To_Left_Paren!=NULL && subshell_balancing_internal!=0)
+            {
+                if (itr_To_Left_Paren->m_token.type == RIGHT_PAREN_TOKEN)
+                    subshell_balancing_internal++;
+                if (itr_To_Left_Paren->m_token.type == LEFT_PAREN_TOKEN)
+                    subshell_balancing_internal--;
+                if (subshell_balancing_internal!=0)
+                    itr_To_Left_Paren=itr_To_Left_Paren->previous;
+            }
+            command->u.subshell_command=CreateCommand(itr_To_Left_Paren->next, ptr_to_GREATERTHAN_Token->previous->previous);
+            command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
+            command->input = NULL;
+            return command;
+            
+        }
+        
         command_t command = checked_malloc(sizeof(struct command));
         command->type = SIMPLE_COMMAND;
         command ->status = -1;
@@ -550,6 +572,29 @@ command_t CreateCommand(token_node* head, token_node* tail)
     //redirection w/ (command) < word > word
     if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
     {
+        if (ptr_to_LESSTHAN_Token->previous->m_token.type == RIGHT_PAREN_TOKEN)
+        {
+            command_t command = checked_malloc(sizeof(struct command));
+            command->type = SUBSHELL_COMMAND;
+            command->status = -1;
+            int subshell_balancing_internal = 1;
+            token_node *itr_To_Left_Paren = (ptr_to_LESSTHAN_Token->previous->previous);
+            while (itr_To_Left_Paren!=NULL && subshell_balancing_internal!=0)
+            {
+                if (itr_To_Left_Paren->m_token.type == RIGHT_PAREN_TOKEN)
+                    subshell_balancing_internal++;
+                if (itr_To_Left_Paren->m_token.type == LEFT_PAREN_TOKEN)
+                    subshell_balancing_internal--;
+                if (subshell_balancing_internal!=0)
+                    itr_To_Left_Paren=itr_To_Left_Paren->previous;
+            }
+            command->u.subshell_command=CreateCommand(itr_To_Left_Paren->next, ptr_to_LESSTHAN_Token->previous->previous);
+            command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
+            command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
+            return command;
+            
+        }
+        
         command_t command = checked_malloc(sizeof(struct command));
         command->type = SIMPLE_COMMAND;
         command ->status = -1;
