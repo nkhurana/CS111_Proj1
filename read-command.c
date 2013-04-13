@@ -227,6 +227,10 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         PIPE_TOKEN,
     } token_type;*/
     
+	command_stream_t cstream;
+	cstream.commands = (command_t *) checked_malloc(100*sizeof(command_t *));
+	cstream.size = 0;
+	
     for (i = 0; i < c.size; i++)
 	{
 	  top_level_command t = c.commands[i];
@@ -238,15 +242,20 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 		itr = itr->next;
 	  }
 	  printf("%d\n", itr->m_token.type);
+	  
+	  command_t command = CreateCommand(t.head, t.tail);
+	  cstream.commands[cstream.size] = command;
+	  //print_command(command);
+	  
+	  if (i == 0)
+	  	cstream.it = cstream.commands[0];
+		
+	  cstream.size++;
 	}
-    
-    top_level_command t = c.commands[0];
-
     
     
     //int it = sizeof(command);
     //printf("size: %i", it);
-    command_t command = CreateCommand(t.head, t.tail);
     // testing github
     
     //if (command->u.word[3])
@@ -264,7 +273,6 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     //printf("pointer address:%p \n",(command->u.word)[5]);
     //printf("pointer address:%p",(&(command->u.word)[1]));
     //printf("string:%s",((command->u.word)[3]));
-    print_command(command);
     //printf("COMMAND TYPE:%i \n", command->type); 
     /*char **w = command->u.word;
     //printf ("%s \n", *w);
@@ -291,13 +299,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     
     //=========Changes the tokens into commands============//
     
-    return fake;
-    
-    
-    
-    
-  //error (1, 0, "command reading not yet implemented");
-  //return 0;
+    return cstream;
 }
 
 
@@ -1047,7 +1049,7 @@ output_read_error(int line, token node)
 command_t
 read_command_stream (command_stream_t s)
 {
-  /* FIXME: Replace this with your implementation too.  */
-  error (1, 0, "command reading not yet implemented");
-  return 0;
+  command_t c = s.it;
+  (s.it)++;
+  return c;
 }
