@@ -339,6 +339,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     token_node* ptr_to_LESSTHAN_Token = NULL;
     token_node* ptr_to_GREATERTHAN_Token = NULL;
+    token_node* ptr_to_SEMICOLON_Token=NULL;
     
     bool SubshellSpotted = false;
     int Subshell_balancing = 0; //+ for every ( ; - for every )
@@ -367,6 +368,11 @@ command_t CreateCommand(token_node* head, token_node* tail)
             if ((!ptr_to_GREATERTHAN_Token) && (!ptr_to_LESSTHAN_Token))
             {
                 numWordsBeforeRedirection++;
+            }
+            
+            if (itr->m_token.type==SEMICOLON_TOKEN)
+            {
+                ptr_to_SEMICOLON_Token=itr;
             }
         
         
@@ -413,7 +419,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
         itr = itr->next;
     }
     
-    
+    //SUBSHELL case
     if ((SubshellSpotted) && (!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&& (!ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token))
     {
         command_t command = checked_malloc(sizeof(struct command));
@@ -623,7 +629,18 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     
     
-    
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&& (!ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token) && (ptr_to_SEMICOLON_Token))
+    {
+        command_t command = checked_malloc(sizeof(struct command));
+        command->type = SEQUENCE_COMMAND;
+        command->status=-1;
+        command->input = NULL;
+        command->output=NULL;
+        command->u.command[0] = CreateCommand(head, ptr_to_SEMICOLON_Token->previous);
+        command->u.command[1] = CreateCommand(ptr_to_SEMICOLON_Token->next,tail);
+        return command;
+        
+    }
     
     
     
