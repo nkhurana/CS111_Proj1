@@ -216,7 +216,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  while(itr != t.tail)
 	  {
 	    printf("%d ", itr->m_token.type);
-		itr = t.head->next;
+		itr = itr->next;
 	  }
 	  printf("%d\n", itr->m_token.type);
 	}
@@ -271,6 +271,8 @@ isSanitized_token_stream (token_node* head)
   
   // for building correct complete commands
   bool top_level = true;
+  
+  bool redirection = true;
 
   token_type first = head->m_token.type;
   if (first != WORD_TOKEN && first != NEWLINE_TOKEN
@@ -283,13 +285,15 @@ isSanitized_token_stream (token_node* head)
   {
     token next_token = it->next->m_token;
     token_type next_type = next_token.type;
-	printf("Current token type = %d\n", it->m_token.type);
+	// printf("Current token type = %d\n", it->m_token.type);
     switch (it->m_token.type)
 	{
 	  case (WORD_TOKEN):
 	  {
 	    if (req_args)
 		  req_args = false;
+		if (redirection)
+		  redirection = false;
 		  
 	    if (next_type == LEFT_PAREN_TOKEN)
 		  output_read_error(line, next_token);
@@ -307,7 +311,7 @@ isSanitized_token_stream (token_node* head)
 		      && next_type != NEWLINE_TOKEN)
 		  output_read_error(line, next_token);
 		  
-		if (top_level)
+		if (top_level && it->m_token.type == SEMICOLON_TOKEN)
 		{
 		  top_level_command new;
 		  new.head = command_begin;
@@ -321,7 +325,10 @@ isSanitized_token_stream (token_node* head)
 		  
 		  c.commands[c.size] = new;
 		  c.size++;
+
 		  command_begin = it->next;
+		  while (command_begin->m_token.type == NEWLINE_TOKEN)
+		    command_begin = command_begin->next;
 		}
 		break;
 	  }
@@ -350,14 +357,16 @@ isSanitized_token_stream (token_node* head)
 	  case (LESS_TOKEN):
 	  {
 	    // greater than followed by word followed by less than is invalid
-	    if (it->previous != head &&
-		     it->previous->previous->m_token.type == GREATER_TOKEN)
+	    if (redirection)
 		  output_read_error(line, next_token);
 	  }
 	  case (GREATER_TOKEN):
 	  {
-	    if (next_type != WORD_TOKEN)
+	    if (next_type != WORD_TOKEN 
+			 || (redirection && it->previous != head
+			      && it->previous->previous->m_token.type != LESS_TOKEN))
 		  output_read_error(line, next_token);
+		redirection = true;
 		break;
 	  }
 	  case (NEWLINE_TOKEN):
@@ -382,7 +391,10 @@ isSanitized_token_stream (token_node* head)
 		  
 		  c.commands[c.size] = new;
 		  c.size++;
+		   
 		  command_begin = it->next;
+		  while (command_begin->m_token.type == NEWLINE_TOKEN)
+		    command_begin = command_begin->next;
 		}
 		
 		line++;
