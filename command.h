@@ -11,7 +11,7 @@ typedef struct token_node token_node;
 struct command_stream
 {
   command_t* commands;
-  command_t it;
+  command_t* it;
   int size;
 };
 

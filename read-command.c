@@ -58,6 +58,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     //ensure file wasn't empty
     if(bufferEndIndex == 0)
     {
+		cstream->commands = NULL;
 		cstream->it = NULL;
         return cstream; //REPLACE W/ PROPER CODE
     }
@@ -248,7 +249,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  cstream->size++;
 	}
 	(cstream->commands)[cstream->size] = NULL;
-	cstream->it = (cstream->commands)[0];
+	cstream->it = cstream->commands;
     
     
     //int it = sizeof(command);
@@ -1046,7 +1047,7 @@ output_read_error(int line, token node)
 command_t
 read_command_stream (command_stream_t s)
 {
-  command_t c = s->it;
+  command_t c = *(s->it);
   (s->it)++;
   return c;
 }
