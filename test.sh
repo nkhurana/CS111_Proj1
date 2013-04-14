@@ -1,1 +1,5 @@
-(cat a; cat b; cat c) | sort
+a&&s
+
+
+
+&

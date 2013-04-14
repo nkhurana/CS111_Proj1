@@ -35,22 +35,7 @@ struct command
   } u;
 };
 
-/*typedef struct command *command_t;
- typedef struct token token;
- typedef struct token_node token_node;
- 
- typedef struct command_stream_t
- {
- int size;
- }command_stream_t;
- 
- typedef struct top_level_command
- {
- token_node* head;
- token_node* tail;
- };
- 
- command_t CreateCommand(token_node* head, token_node* tail);*/
+
 
 typedef enum {
     SEMICOLON_TOKEN,

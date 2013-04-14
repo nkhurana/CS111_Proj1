@@ -40,6 +40,7 @@ char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next
         }
         //printf ("%c \n", value);
     }
+    //puts(buffer);
     return buffer;
 }
 
@@ -92,7 +93,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         {
             if (((i+1)== bufferEndIndex) || buffer[i+1] != '&')
             {
-                error(1,0,"incorrect AND command");
+                error(1, 0, "Line %d: Incorrect AND command'", lineNumberCounter);
             }
             typeOfToken=AND_TOKEN;
             i++;
@@ -104,7 +105,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
             {
                 if (!(isspace(buffer[i-1])))
                 {
-                     error(1,0,"improper comment declaration");
+                     error(1, 0, "Line %d: Improper comment declaration'", lineNumberCounter);
                 }
              }
            
@@ -166,7 +167,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         else
 		{
 		  free(word);
-		  error(1,0,"Unrecognizable character");
+		  error(1, 0, "Line %d: Unrecognizable character'", lineNumberCounter);
 		}
         
         token current_token;
@@ -211,7 +212,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	
 	*/
 	//==============Sanitize token stream===========//
-	free_list[TOKEN_STREAM] = head;
+    free_list[TOKEN_STREAM] = head;
 	top_level_command_t c = isSanitized_token_stream(head);
     puts("Looks good!");
 	puts("\n //============== DEBUG TOP LEVEL COMMANDS =================//\n");
@@ -229,7 +230,8 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         PIPE_TOKEN,
     } token_type;*/
     
-	cstream->commands = (command_t *) checked_malloc(100*sizeof(command_t *));
+    size_t max_numberOfCommands = 1;
+	cstream->commands = (command_t *) checked_malloc(max_numberOfCommands*sizeof(command_t *));
 	
     for (i = 0; i < c.size; i++)
 	{
@@ -246,11 +248,19 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  command_t command = CreateCommand(t.head, t.tail);
 	  (cstream->commands)[cstream->size] = command;
 
-	  cstream->size++;
+	  cstream->size++;  
+      if (cstream->size == max_numberOfCommands) 
+      {
+          puts("hi");
+          max_numberOfCommands*=2;
+          cstream->commands = checked_realloc(cstream->commands, (max_numberOfCommands*sizeof(command_t*)));
+      }
+        
+        
 	}
+    puts("HERE!");
 	(cstream->commands)[cstream->size] = NULL;
 	cstream->it = cstream->commands;
-    
     
     //int it = sizeof(command);
     //printf("size: %i", it);
@@ -840,8 +850,8 @@ isSanitized_token_stream (token_node* head)
 		      && next_type != WORD_TOKEN && next_type != COMMENT_TOKEN
 			  && next_type != NEWLINE_TOKEN)
 		  output_read_error(line, next_token);
-		
-		token_type prev_type = it->previous->m_token.type;
+		//if (it->previous) (COULD BE NULL)
+        token_type prev_type = it->previous->m_token.type;
 		if (top_level && !req_args && (prev_type != SEMICOLON_TOKEN && prev_type != NEWLINE_TOKEN))
 		{
 		  top_level_command new;
