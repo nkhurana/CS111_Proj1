@@ -230,7 +230,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         PIPE_TOKEN,
     } token_type;*/
     
-    size_t max_numberOfCommands = 1;
+    size_t max_numberOfCommands = 100;
 	cstream->commands = (command_t *) checked_malloc(max_numberOfCommands*sizeof(command_t *));
 	
     for (i = 0; i < c.size; i++)
@@ -251,14 +251,12 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  cstream->size++;  
       if (cstream->size == max_numberOfCommands) 
       {
-          puts("hi");
           max_numberOfCommands*=2;
           cstream->commands = checked_realloc(cstream->commands, (max_numberOfCommands*sizeof(command_t*)));
       }
         
         
 	}
-    puts("HERE!");
 	(cstream->commands)[cstream->size] = NULL;
 	cstream->it = cstream->commands;
     
