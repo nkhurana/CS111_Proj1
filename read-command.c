@@ -17,7 +17,6 @@ bool isValidCharacterForWordToken(char c)
     return false;
 }
 
-
 char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next_byte_argument, int* bufferEndIndex)
 {
     size_t bufferSize = 512; //set initial size to 512 bytes
@@ -29,18 +28,13 @@ char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next
     while ((value = get_next_byte(get_next_byte_argument)) != EOF) 
     {
         buffer[*bufferEndIndex] = value;
-        //    printf("looped once: %c \n", value);
-        //    printf("bufferSize: %d \n", (int) bufferSize);
         (*bufferEndIndex)++;
         if (bufferSize == *((size_t*) bufferEndIndex))
         {
             bufferSize*=2;
             buffer =  (char*)checked_realloc(buffer, bufferSize);
-            //printf("called checked_realloc: %d\n", (int) bufferSize);
         }
-        //printf ("%c \n", value);
     }
-    //puts(buffer);
     return buffer;
 }
 
@@ -49,12 +43,11 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     //READ FROM FILE INTO CHARACTER BUFFER
     int bufferEndIndex=0;
     char* buffer = ReadFileIntoCharacterBuffer(get_next_byte, get_next_byte_argument,&bufferEndIndex); 
-    //printf("%i \n", bufferEndIndex); //characters from 0th index to (bufferEndIndex-1)
-    //puts(buffer);
     
     //TOKENIZE THE CHARACTER BUFFER AND CONSTRUCT TOKEN_NODE
     
     command_stream_t cstream =(command_stream_t) checked_malloc(sizeof(struct command_stream));
+	free_list[COMMAND_STREAM] = cstream;
     cstream->size = 0;
     //ensure file wasn't empty
     if(bufferEndIndex == 0)
@@ -71,12 +64,10 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
     int i;
     for (i=0; i<bufferEndIndex;i++) //iterate through character buffer
     {
-        
         if ((buffer[i] == ' ') || (buffer[i]== '\t'))
         {
             continue;
         }
-        
         char* word = NULL;
         if (buffer[i] == '|')
         {
@@ -87,8 +78,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
             }
             else
                 typeOfToken=PIPE_TOKEN;
-        }
-        
+        }        
         else if (buffer[i] == '&')
         {
             if (((i+1)== bufferEndIndex) || buffer[i+1] != '&')
@@ -97,8 +87,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
             }
             typeOfToken=AND_TOKEN;
             i++;
-        }
-        
+        }        
         else if (buffer[i] == '#') //comment
         {
             if (i!=0)
@@ -113,41 +102,33 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
                 i++;}
   
             continue;
-        }
-        
+        }        
         else if (buffer[i] == '\n')
         {
             typeOfToken = NEWLINE_TOKEN;
             lineNumberCounter++;
-        }
-        
+        }        
         else if (buffer[i] == ')')
         {
             typeOfToken = RIGHT_PAREN_TOKEN;
-        }
-        
+        }       
         else if (buffer[i] == '<')
         {
             //puts("HI");
             typeOfToken = LESS_TOKEN;
-        }
-        
+        }        
         else if (buffer[i] == ';')
         {
             typeOfToken = SEMICOLON_TOKEN;
-        }
-        
+        }       
         else if (buffer[i] == '(')
         {
             typeOfToken = LEFT_PAREN_TOKEN;
-        }
-        
-        
+        }             
         else if (buffer[i] == '>')
         {
             typeOfToken = GREATER_TOKEN;
-        }
-        
+        }        
         else if (isValidCharacterForWordToken(buffer[i]))
         {
             int length = 1;
@@ -186,53 +167,16 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
         tail = current_token_node;
         
     }
-    /*
-    puts("SEMICOLON_TOKEN: 0 \nNEWLINE_TOKEN: 1 \nAND_TOKEN: 2 \nOR_TOKEN: 3 \nGREATER_TOKEN: 4 \nWORD_TOKEN: 5 \nLEFT_PAREN_TOKEN: 6 \nRIGHT_PAREN_TOKEN: 7 \nLESS_TOKEN: 8 \nCOMMENTS_TOKEN: 9 \nPIPE_TOKEN: 10 \nMISC_TOKEN: 11 \n");*/
-    /*
-    //puts(tstream->m_token.words);
-    token_node* itr = head;
-    while (itr != NULL)
-    {
-        //printf("%d \n", tstream->m_token.type);
-        //the above line works to display just the tokens, the below doesn't work because there's a segfault on accessing the token words
-        if (itr->m_token.type == WORD_TOKEN)
-        {
-            printf("%d: ", itr->m_token.type);
-            
-            puts(itr->m_token.word); //doesn't work if string is very last thing
-            //printf("Line number:%i \n ", tstream->m_token.lineNumber);
-            //puts("\n");
-        }
-        else 
-            printf("Token %d \n", itr->m_token.type);
-        
-        
-        itr = itr->next;
-    }
-	
-	*/
+	head->previous = NULL;
+
 	//==============Sanitize token stream===========//
     free_list[TOKEN_STREAM] = head;
 	top_level_command_t c = isSanitized_token_stream(head);
-    puts("Looks good!");
-	puts("\n //============== DEBUG TOP LEVEL COMMANDS =================//\n");
-    /*typedef enum {
-        SEMICOLON_TOKEN,
-        NEWLINE_TOKEN,
-        AND_TOKEN,
-        OR_TOKEN,
-        GREATER_TOKEN,
-        WORD_TOKEN,
-        LEFT_PAREN_TOKEN,
-        RIGHT_PAREN_TOKEN,
-        LESS_TOKEN,
-        COMMENT_TOKEN,
-        PIPE_TOKEN,
-    } token_type;*/
     
-    size_t max_numberOfCommands = 100;
+    int max_numberOfCommands = 100;
 	cstream->commands = (command_t *) checked_malloc(max_numberOfCommands*sizeof(command_t *));
 	
+	//=========Changes the tokens into commands============//
     for (i = 0; i < c.size; i++)
 	{
 	  top_level_command t = c.commands[i];
@@ -240,10 +184,8 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  token_node *itr = t.head;
 	  while(itr != t.tail)
 	  {
-	    printf("%d ", itr->m_token.type);
 		itr = itr->next;
 	  }
-	  printf("%d\n", itr->m_token.type);
 	  
 	  command_t command = CreateCommand(t.head, t.tail);
 	  (cstream->commands)[cstream->size] = command;
@@ -254,56 +196,9 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
           max_numberOfCommands*=2;
           cstream->commands = checked_realloc(cstream->commands, (max_numberOfCommands*sizeof(command_t*)));
       }
-        
-        
 	}
 	(cstream->commands)[cstream->size] = NULL;
 	cstream->it = cstream->commands;
-    
-    //int it = sizeof(command);
-    //printf("size: %i", it);
-    // testing github
-    
-    //if (command->u.word[3])
-      //  puts("NO!");
-    //puts(command->u.word[2]);
-    
-    
-    //if (command->u.word[2])
-      //  puts("NO!");
-    
-    //puts((command->u.word)[0]);
-    //puts((command->u.word)[1]);
-    //puts((command->u.word)[2]);
-    //printf("pointer address:%p \n",(command->u.word)[2]);
-    //printf("pointer address:%p \n",(command->u.word)[5]);
-    //printf("pointer address:%p",(&(command->u.word)[1]));
-    //printf("string:%s",((command->u.word)[3]));
-    //printf("COMMAND TYPE:%i \n", command->type); 
-    /*char **w = command->u.word;
-    //printf ("%s \n", *w);
-	while (*++w)
-        printf (" %s \n", *w);
-    
-    //puts(*(command->u.word));
-
-        
-        */
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //=========Changes the tokens into commands============//
     
     return cstream;
 }
@@ -450,8 +345,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->input = NULL;
         command->output=NULL;
         int it = (sizeof(char*))*numWordNodes;
-        printf("size: %i \n", it);
-        
+		
         command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordNodes+1));
         itr = head;
         int index = 0;
@@ -650,14 +544,6 @@ command_t CreateCommand(token_node* head, token_node* tail)
         
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
     //PIPE COMMAND
     
     if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (ptr_to_PIPE_Token))
@@ -673,12 +559,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
         
         
     }
-    
-    
-    
-    
-    
-    
+
     //AND COMMAND
     
     if ((ptr_to_AND_Token) && (AND_index_placeholder>OR_index_placeholder))
@@ -710,14 +591,6 @@ command_t CreateCommand(token_node* head, token_node* tail)
         return command;
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
 }
 
 top_level_command_t
@@ -745,10 +618,15 @@ isSanitized_token_stream (token_node* head)
 
   token_type first = head->m_token.type;
   if (first != WORD_TOKEN && first != NEWLINE_TOKEN
-       && first != AND_TOKEN && first != LEFT_PAREN_TOKEN)
+       && first != LEFT_PAREN_TOKEN)
 	output_read_error(line, head->m_token);
 	
   token_node *it = head;
+  if (first == NEWLINE_TOKEN)
+  {
+    while (it->m_token.type == NEWLINE_TOKEN)
+	  it = it->next;
+  }
   token_node *command_begin = it;
   while (it->next != NULL)
   {
@@ -848,8 +726,13 @@ isSanitized_token_stream (token_node* head)
 		      && next_type != WORD_TOKEN && next_type != COMMENT_TOKEN
 			  && next_type != NEWLINE_TOKEN)
 		  output_read_error(line, next_token);
-		//if (it->previous) (COULD BE NULL)
-        token_type prev_type = it->previous->m_token.type;
+		
+		token_type prev_type;
+		if (it->previous)
+          prev_type = it->previous->m_token.type;
+		else
+		  prev_type = NEWLINE_TOKEN;
+		  
 		if (top_level && !req_args && (prev_type != SEMICOLON_TOKEN && prev_type != NEWLINE_TOKEN))
 		{
 		  top_level_command new;
@@ -1022,35 +905,6 @@ output_read_error(int line, token node)
   }
   error(1, 0, "Line %d: syntax '%s'", line, c);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 command_t
 read_command_stream (command_stream_t s)

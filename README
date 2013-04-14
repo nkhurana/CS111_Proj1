@@ -1,1 +1,10 @@
 Neeraj Khurana (UID: 603795975)
+Evan Shi (UID: 103802860)
+
+CS 111 Lab 1a
+Command builder for subset of standard POSIX
+
+We are unaware of any known limitations of our code.
+
+We tokenize the input commands and do syntax checking at a token level. We then
+transform the tokens into the appropriate commands.

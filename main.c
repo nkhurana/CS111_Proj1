@@ -77,14 +77,15 @@ free_command(command_t c)
 void
 free_command_stream()
 {
-  command_stream_t it = free_list[COMMAND_STREAM];
-  command_t *c = it->commands;
+  command_stream_t s = free_list[COMMAND_STREAM];
+  command_t *c = s->commands;
   int i;
-  for (i = 0; i < it->size; i++)
+  for (i = 0; i < s->size; i++)
   {
     free_command(c[i]);
   }
   free(c);
+  free(s);
 }
 
 int
@@ -133,9 +134,9 @@ main (int argc, char **argv)
 	}
     }
 
-  //free_token_stream();
-  //free_top_level_command();
-  // free_command_stream();
-  
+  free_token_stream();
+  free_top_level_command();
+  free_command_stream();
+
   return print_tree || !last_command ? 0 : command_status (last_command);
 }
