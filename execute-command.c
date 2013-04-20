@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
@@ -28,21 +29,29 @@ execute_command (command_t c, bool time_travel)
   char *cmd = c->u.word[0];
   pid_t pid;
   int status;
-  char *envp[] =
-    {
-        "HOME=/",
-        "PATH=/bin:/usr/bin:/usr/local/bin:/usr/local/cs/bin",
-		"SHELL=/usr/local/bin/tcsh",
-        NULL
-    };
  
   switch ( pid = fork() ) {
     case -1:
       perror("fork()");
       exit(EXIT_FAILURE);
     case 0: // in the child
-      status = execve(cmd, c->u.word, envp);
-      exit(status); // only happens if execve(2) fails
+	  if (c->input)
+	  {
+	    int fd = open(c->input, O_RDONLY);
+		if (dup2(fd, 0) != 0);
+			perror("Unable to redirect input");
+		close(fd);
+	  }
+	  
+	  if (c->output)
+	  {
+	    int fd = open(c->output, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+		dup2(fd, 1);
+		close(fd);
+	  }
+	  
+      status = execvp(cmd, c->u.word);
+      exit(status); // only happens if execvp(2) fails
     default: // in parent
       if ( waitpid(pid, &status, 0) < 0 ) {
         perror("waitpid()");
@@ -50,7 +59,7 @@ execute_command (command_t c, bool time_travel)
       }
 
       if ( WIFEXITED(status) ) {
-        // return status from child, ie ./test_args
+        // return status from child
         exit( WEXITSTATUS(status) );
       }
       exit(EXIT_FAILURE);
