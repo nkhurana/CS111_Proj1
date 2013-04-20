@@ -226,15 +226,10 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     token_node* itr = head;
     int totalNodes=0;
-    int numNewlines=0;
     int numWordNodes=0;
     int numWordsBeforeRedirection = 0;
     int AND_index_placeholder = 0;
     int OR_index_placeholder = 0;
-    
-    
-    int LESSTHAN_index_placeholder=0;
-    int GREATERTHAN_index_placeholder=0;
     
     token_node* ptr_to_AND_Token = NULL;
     token_node* ptr_to_OR_Token = NULL;
@@ -282,14 +277,12 @@ command_t CreateCommand(token_node* head, token_node* tail)
             if (itr->m_token.type== LESS_TOKEN)
             {
                 ptr_to_LESSTHAN_Token = itr;
-                LESSTHAN_index_placeholder=totalNodes;
             }
         
         
             if (itr->m_token.type== GREATER_TOKEN)
             {
                 ptr_to_GREATERTHAN_Token = itr;
-                GREATERTHAN_index_placeholder=totalNodes;
             }
         
             if (itr->m_token.type == PIPE_TOKEN)
@@ -344,7 +337,6 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
-        int it = (sizeof(char*))*numWordNodes;
 		
         command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordNodes+1));
         itr = head;
@@ -590,7 +582,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->u.command[1] = CreateCommand(ptr_to_OR_Token->next,tail);
         return command;
     }
-    
+    return NULL;
 }
 
 top_level_command_t
@@ -622,11 +614,10 @@ isSanitized_token_stream (token_node* head)
 	output_read_error(line, head->m_token);
 	
   token_node *it = head;
-  if (first == NEWLINE_TOKEN)
-  {
-    while (it->m_token.type == NEWLINE_TOKEN)
-	  it = it->next;
-  }
+  
+  while (it->m_token.type == NEWLINE_TOKEN)
+	it = it->next;
+	
   token_node *command_begin = it;
   while (it->next != NULL)
   {
