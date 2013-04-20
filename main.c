@@ -121,18 +121,18 @@ main (int argc, char **argv)
   command_t last_command = NULL;
   command_t command;
   while ((command = read_command_stream (command_stream))) //PART 1A
-    {
+  {
     if (print_tree)
 	{
 	  printf ("# %d\n", command_number++);
 	  print_command (command);
 	}
-      else
+    else
 	{
 	  last_command = command;
 	  execute_command (command, time_travel);
 	}
-    }
+  }
 
   free_token_stream();
   free_top_level_command();
