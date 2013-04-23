@@ -62,17 +62,22 @@ execute_command (command_t c, bool time_travel)
             {
                 pipe(fd);
                 int ap = fork();
+                if (ap == -1)
+                {
+                    perror("Unable to fork");
+                    exit(EXIT_FAILURE);
+                }
                 if (ap == 0)
                 {
-                    if (dup2(fd[1], 1) != 1)
+                    if (dup2(fd[1], STDOUT_FILENO) != STDOUT_FILENO)
                         perror("Pipe command: unable to redirect output");
                     execute_command (c->u.command[0], time_travel);
                     close(fd[1]);
                 }
                 else
                 {
-                    if (dup2(fd[0], 0) != 0)
-                        perror("Pipe command: unable to redirect output");
+                    if (dup2(fd[0], STDIN_FILENO) != STDIN_FILENO)
+                        perror("Pipe command: unable to read input");
                     execute_command (c->u.command[1], time_travel);
                     close(fd[0]);
                 }
@@ -85,19 +90,20 @@ execute_command (command_t c, bool time_travel)
             if (c->input)
             {
                 int fdi = open(c->input, O_RDONLY);
-                if (dup2(fdi, 0) != 0)
+                if (dup2(fdi, STDIN_FILENO) != STDIN_FILENO)
                     perror("Unable to redirect input");
                 close(fdi);
             }
             if (c->output)
             {
                 int fdo = open(c->output, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-                if (dup2(fdo, 1) != 1)
+                if (dup2(fdo, STDOUT_FILENO) != STDOUT_FILENO)
                     perror("Unable to redirect output");
                 close(fdo);
             }
             execute_command(c->u.subshell_command, time_travel);
             c->status = c->u.subshell_command->status;
+            break;
         }
         case SIMPLE_COMMAND:
         {
@@ -114,7 +120,7 @@ execute_command (command_t c, bool time_travel)
                     if (c->input)
                     {
                         int fdi = open(c->input, O_RDONLY);
-                        if (dup2(fdi, 0) != 0)
+                        if (dup2(fdi, STDIN_FILENO) != STDIN_FILENO)
                             perror("Unable to redirect input");
                         close(fdi);
                     }
@@ -122,7 +128,7 @@ execute_command (command_t c, bool time_travel)
                     if (c->output)
                     {
                         int fdo = open(c->output, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-                        if (dup2(fdo, 1) != 1)
+                        if (dup2(fdo, STDOUT_FILENO) != STDOUT_FILENO)
                             perror("Unable to redirect output");
                         close(fdo);
                     }
@@ -130,7 +136,7 @@ execute_command (command_t c, bool time_travel)
                     status = execvp(cmd, c->u.word);
                     exit(status); // only happens if execvp(2) fails
                 default: // in parent
-                    if ( waitpid(pid, &status, 0) < 0 )
+                    if (waitpid(pid, &status, 0) < 0)
                     {
                         perror("Waiting on child produced error");
                         exit(EXIT_FAILURE);
