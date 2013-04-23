@@ -7,10 +7,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
+void execute_SimpleCommand (command_t c, bool time_travel);
 
 int
 command_status (command_t c)
@@ -18,11 +21,16 @@ command_status (command_t c)
   return c->status;
 }
 
+
+
+
+
 void
-execute_command (command_t c, bool time_travel)
+execute_Command (command_t c, bool time_travel)
 {
   switch(c->type)
   {
+
 	case AND_COMMAND:
 	{
 	  execute_command (c->u.command[0], time_travel);
@@ -83,6 +91,14 @@ execute_command (command_t c, bool time_travel)
 	case SUBSHELL_COMMAND:
 	{
 	  if (c->input)
+
+    case -1:
+      perror("Unable to fork");
+      exit(EXIT_FAILURE);
+    case 0: // in the child
+	  
+      if (c->input)
+
 	  {
 	    int fdi = open(c->input, O_RDONLY);
 		if (dup2(fdi, 0) != 0)
