@@ -71,15 +71,15 @@ execute_command (command_t c, bool time_travel)
                 {
                     if (dup2(fd[1], STDOUT_FILENO) != STDOUT_FILENO)
                         perror("Pipe command: unable to redirect output");
+				    close(fd[0]);
                     execute_command (c->u.command[0], time_travel);
-                    close(fd[1]);
                 }
                 else
                 {
                     if (dup2(fd[0], STDIN_FILENO) != STDIN_FILENO)
                         perror("Pipe command: unable to read input");
+					close(fd[1]);
                     execute_command (c->u.command[1], time_travel);
-                    close(fd[0]);
                 }
             }
             c->status = c->u.command[1]->status;
@@ -134,6 +134,7 @@ execute_command (command_t c, bool time_travel)
                     }
                     
                     status = execvp(cmd, c->u.word);
+					perror(cmd);
                     exit(status); // only happens if execvp(2) fails
                 default: // in parent
                     if (waitpid(pid, &status, 0) < 0)
