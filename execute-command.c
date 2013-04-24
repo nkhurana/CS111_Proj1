@@ -58,6 +58,8 @@ execute_command (command_t c, bool time_travel)
         {
             int fd[2];
             int bp = fork();
+			int bpstatus;
+			//fprintf(stderr, "MAIN PID: %d\n", getpid());
             if (bp == 0) // child
             {
                 pipe(fd);
@@ -69,20 +71,37 @@ execute_command (command_t c, bool time_travel)
                 }
                 if (ap == 0)
                 {
+					//fprintf(stderr, "ap process ID: %d\n", getpid());
                     if (dup2(fd[1], STDOUT_FILENO) != STDOUT_FILENO)
                         perror("Pipe command: unable to redirect output");
 				    close(fd[0]);
                     execute_command (c->u.command[0], time_travel);
+					//fprintf(stderr, "ap process has returned\n");
+					exit(c->u.command[0]->status);
                 }
                 else
                 {
+					//fprintf(stderr, "bp process ID: %d spawned %d\n", getpid(), ap);
                     if (dup2(fd[0], STDIN_FILENO) != STDIN_FILENO)
                         perror("Pipe command: unable to read input");
 					close(fd[1]);
                     execute_command (c->u.command[1], time_travel);
+					//fprintf(stderr, "bp process has returned\n");
+					exit(c->u.command[1]->status);
                 }
             }
-            c->status = c->u.command[1]->status;
+			else
+			{
+				if(waitpid(bp, &bpstatus, 0) < 0)
+				{
+					perror("Waiting on child produced error");
+					exit(EXIT_FAILURE);
+				}
+				if ( WIFEXITED(bpstatus) )
+                {
+					c->status = WEXITSTATUS(bpstatus);
+                }
+			}
             break;
         }
         case SUBSHELL_COMMAND:
@@ -132,7 +151,8 @@ execute_command (command_t c, bool time_travel)
                             perror("Unable to redirect output");
                         close(fdo);
                     }
-                    
+					
+					//fprintf(stderr, "Executing command %s in process %d\n", cmd, getpid());
                     status = execvp(cmd, c->u.word);
 					perror(cmd);
                     exit(status); // only happens if execvp(2) fails
@@ -145,6 +165,7 @@ execute_command (command_t c, bool time_travel)
                     
                     if ( WIFEXITED(status) )
                     {
+						//fprintf(stderr, "Parent process %d: Finished executing %s in child %d\n", getpid(), cmd, pid);
                         // return status from child
                         c->status = WEXITSTATUS(status);
                     }
