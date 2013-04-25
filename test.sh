@@ -1,1 +1,1 @@
- echo hi > a && echo shoot!
+echo foo | rev
