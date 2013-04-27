@@ -691,7 +691,8 @@ isSanitized_token_stream (token_node* head)
 		  output_read_error(line, next_token);
 		  
 	    paren_count--;
-		top_level = true;
+		if (paren_count == 0)
+		  top_level = true;
 		
 		break;
 	  }
@@ -742,6 +743,10 @@ isSanitized_token_stream (token_node* head)
 		  command_begin = it->next;
 		  while (command_begin->m_token.type == NEWLINE_TOKEN)
 		    command_begin = command_begin->next;
+		}
+		else if (!top_level && (prev_type == WORD_TOKEN || prev_type == RIGHT_PAREN_TOKEN))
+		{
+		  it->m_token.type = SEMICOLON_TOKEN;
 		}
 		
 		line++;
