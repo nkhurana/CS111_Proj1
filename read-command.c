@@ -744,10 +744,14 @@ isSanitized_token_stream (token_node* head)
 		  while (command_begin->m_token.type == NEWLINE_TOKEN)
 		    command_begin = command_begin->next;
 		}
-		else if (!top_level && (prev_type == WORD_TOKEN || prev_type == RIGHT_PAREN_TOKEN)
-								&& (next_type == WORD_TOKEN || next_type == LEFT_PAREN_TOKEN))
+		else if (!top_level && (prev_type == WORD_TOKEN || prev_type == RIGHT_PAREN_TOKEN))
 		{
-		  it->m_token.type = SEMICOLON_TOKEN;
+		  itr2 = it->next;
+		  while(itr2->m_token.type == NEWLINE_TOKEN)
+		    itr2 = itr2->next;
+		  
+		  if (itr2->m_token.type == WORD_TOKEN || itr2->m_token.type == LEFT_PAREN_TOKEN);
+		    it->m_token.type = SEMICOLON_TOKEN;
 		}
 		
 		line++;
