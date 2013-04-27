@@ -570,7 +570,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     }
     
     //OR COMMAND
-    if ((ptr_to_OR_Token) && && (!ptr_to_SEMICOLON_Token) && (OR_index_placeholder>AND_index_placeholder))
+    if ((ptr_to_OR_Token) && (!ptr_to_SEMICOLON_Token) && (OR_index_placeholder>AND_index_placeholder))
     {
         command_t command = checked_malloc(sizeof(struct command));
         command->type = OR_COMMAND;
