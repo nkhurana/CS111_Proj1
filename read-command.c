@@ -363,7 +363,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     
     //basic redirection w/ only <
-    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token))
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_SEMICOLON_Token) && (!ptr_to_PIPE_Token)&&(ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token))
     {
         
         if (ptr_to_LESSTHAN_Token->previous->m_token.type == RIGHT_PAREN_TOKEN)
@@ -418,7 +418,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     }
     
     //basic redirection w/ only >
-    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(!ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_SEMICOLON_Token) && (!ptr_to_PIPE_Token)&&(!ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
     {
         if (ptr_to_GREATERTHAN_Token->previous->m_token.type == RIGHT_PAREN_TOKEN)
         {
@@ -470,7 +470,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     }
     
     //redirection w/ (command) < word > word
-    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(ptr_to_LESSTHAN_Token) && (ptr_to_GREATERTHAN_Token))
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&&(ptr_to_LESSTHAN_Token) && (!ptr_to_SEMICOLON_Token) && (ptr_to_GREATERTHAN_Token))
     {
         if (ptr_to_LESSTHAN_Token->previous->m_token.type == RIGHT_PAREN_TOKEN)
         {
@@ -538,7 +538,8 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     //PIPE COMMAND
     
-    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_SEMICOLON_Token) &&(ptr_to_PIPE_Token))
+    if ((ptr_to_PIPE_Token) && (!ptr_to_AND_Token) && (!ptr_to_OR_Token) && 
+        (!ptr_to_SEMICOLON_Token))
     {
         command_t command = checked_malloc(sizeof(struct command));
         command->type = PIPE_COMMAND;
