@@ -521,9 +521,9 @@ command_t CreateCommand(token_node* head, token_node* tail)
         
     }
     
+    //SEMICOLON
     
-    
-    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&& (!ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token) && (ptr_to_SEMICOLON_Token))
+    if ((ptr_to_SEMICOLON_Token))
     {
         command_t command = checked_malloc(sizeof(struct command));
         command->type = SEQUENCE_COMMAND;
@@ -538,7 +538,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     
     //PIPE COMMAND
     
-    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (ptr_to_PIPE_Token))
+    if ((!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_SEMICOLON_Token) &&(ptr_to_PIPE_Token))
     {
         command_t command = checked_malloc(sizeof(struct command));
         command->type = PIPE_COMMAND;
@@ -554,7 +554,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
 
     //AND COMMAND
     
-    if ((ptr_to_AND_Token) && (AND_index_placeholder>OR_index_placeholder))
+    if ((ptr_to_AND_Token) && (!ptr_to_SEMICOLON_Token) && (AND_index_placeholder>OR_index_placeholder))
     {
         command_t command = checked_malloc(sizeof(struct command));
         command->type = AND_COMMAND;
@@ -570,7 +570,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
     }
     
     //OR COMMAND
-    if ((ptr_to_OR_Token) && (OR_index_placeholder>AND_index_placeholder))
+    if ((ptr_to_OR_Token) && && (!ptr_to_SEMICOLON_Token) && (OR_index_placeholder>AND_index_placeholder))
     {
         command_t command = checked_malloc(sizeof(struct command));
         command->type = OR_COMMAND;
