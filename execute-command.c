@@ -73,7 +73,6 @@ execute_command (command_t c, bool time_travel)
                 if (ap == 0)
                 {
 					//fprintf(stderr, "ap process ID: %d\n", getpid());
-                    close(fd[0]);
                     if (dup2(fd[1], STDOUT_FILENO) != STDOUT_FILENO)
                         perror("Pipe command: unable to redirect output");
 				    close(fd[0]);
@@ -84,23 +83,13 @@ execute_command (command_t c, bool time_travel)
                 else
                 {
 					//fprintf(stderr, "bp process ID: %d spawned %d\n", getpid(), ap);
-                    close(fd[1]);
-                    _exit(c->u.command[0]->status);
-                }
-                else
-                {
-                    close(fd[1]);
                     if (dup2(fd[0], STDIN_FILENO) != STDIN_FILENO)
                         perror("Pipe command: unable to read input");
 					close(fd[1]);
                     execute_command (c->u.command[1], time_travel);
 					//fprintf(stderr, "bp process has returned\n");
 					exit(c->u.command[1]->status);
-                    close(fd[0]);
-                    _exit(c->u.command[1]->status);
                 }
-                
-                
             }
 			else
 			{

@@ -392,7 +392,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
         {        
             command_t command = checked_malloc(sizeof(struct command));
             command->type = SIMPLE_COMMAND;
-            command ->status = -1;
+            command->status = -1;
         
             command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordsBeforeRedirection+1));
             itr = head;

@@ -109,7 +109,7 @@ main (int argc, char **argv)
   // There must be exactly one file argument.
   if (optind != argc - 1)
     usage ();
-    //hi!
+
 
   script_name = argv[optind];
   FILE *script_stream = fopen (script_name, "r");
