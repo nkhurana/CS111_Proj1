@@ -174,7 +174,11 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	top_level_command_t c = isSanitized_token_stream(head);
     
     int max_numberOfCommands = 100;
+<<<<<<< HEAD
 	cstream->commands = (tlc_wrapper_t *) checked_malloc(max_numberOfCommands*sizeof(tlc_wrapper_t));
+=======
+	cstream->commands = (tlc_wrapper_t*) checked_malloc(max_numberOfCommands*sizeof(tlc_wrapper_t));
+>>>>>>> d
 	
 	//=========Changes the tokens into commands============//
     for (i = 0; i < c.size; i++)
@@ -919,4 +923,5 @@ read_command_stream (command_stream_t s)
   tlc_wrapper_t c = *(s->it);
   (s->it)++;
   return !c ? NULL : c->command;
+
 }
