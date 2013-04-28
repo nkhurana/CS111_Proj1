@@ -174,7 +174,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	top_level_command_t c = isSanitized_token_stream(head);
     
     int max_numberOfCommands = 100;
-	cstream->commands = (command_t *) checked_malloc(max_numberOfCommands*sizeof(command_t *));
+	cstream->commands = (tlc_wrapper *) checked_malloc(max_numberOfCommands*sizeof(tlc_wrapper *));
 	
 	//=========Changes the tokens into commands============//
     for (i = 0; i < c.size; i++)
@@ -188,13 +188,17 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	  }
 	  
 	  command_t command = CreateCommand(t.head, t.tail);
-	  (cstream->commands)[cstream->size] = command;
+	  tlc_wrapper *new = (tlc_wrapper *) checked_malloc (sizeof(tlc_wrapper));
+	  new->command = command;
+	  new->nDependsOn = 0;
+	  new->head = NULL;
+	  (cstream->commands)[cstream->size] = new;
 
 	  cstream->size++;  
       if (cstream->size == max_numberOfCommands) 
       {
           max_numberOfCommands*=2;
-          cstream->commands = checked_realloc(cstream->commands, (max_numberOfCommands*sizeof(command_t*)));
+          cstream->commands = checked_realloc(cstream->commands, (max_numberOfCommands*sizeof(tlc_wrapper*)));
       }
 	}
 	(cstream->commands)[cstream->size] = NULL;
@@ -911,7 +915,7 @@ output_read_error(int line, token node)
 command_t
 read_command_stream (command_stream_t s)
 {
-  command_t c = *(s->it);
+  tlc_wrapper_t c = *(s->it);
   (s->it)++;
-  return c;
+  return c->command;
 }

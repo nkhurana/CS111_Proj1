@@ -68,9 +68,22 @@ free_command(command_t c)
 	}
 	case SUBSHELL_COMMAND:
 	{
-	 free(c->u.subshell_command);
+	 free_command(c->u.subshell_command);
 	 break;
 	}
+  }
+}
+
+void
+free_tlc_dependencies(tlc_wrapper *tlc)
+{
+  free_command(tlc->command);
+  dependency_token *itr = tlc->head;
+  while(itr != NULL)
+  {
+    temp = itr;
+	itr = itr->next;
+	free (temp);
   }
 }
 
@@ -78,11 +91,11 @@ void
 free_command_stream()
 {
   command_stream_t s = free_list[COMMAND_STREAM];
-  command_t *c = s->commands;
+  tlc_wrapper_t *c = s->commands;
   int i;
   for (i = 0; i < s->size; i++)
   {
-    free_command(c[i]);
+    free_tlc_dependencies(c[i]);
   }
   free(c);
   free(s);
