@@ -163,7 +163,60 @@ main (int argc, char **argv)
     else
 	{
 	  last_command = command;
-	  execute_command (command, time_travel);
+	  if (!time_travel)
+	    execute_command (command, time_travel);
+	  else // time_travel!
+	  {
+	    if (tlc->nDependsOn == 0) // run if no dependencies
+		{
+		  pid_t pid = fork();
+		  if (pid == 0) // child
+		  {
+		    execute_command (command, time_travel);
+			exit(command->status); // done executing
+		  } 
+		  else
+		    tlc->pid = pid; // assign pid to recover
+		}
+	  }
+	}
+  }
+  
+  pid_t child_pid;
+  int status;
+  while((child_pid == waitpid(-1, &status, 0))) // wait for all children
+  {
+    reset_command_stream_itr(command_stream); // processes don't run in order
+	tlc_wrapper_t match;
+	int errno = 0;
+    while((match = read_command_stream(command_stream)))
+	{
+	  errno++;
+	  if (match->pid = child_pid) // find tlc whose command was run
+	  {
+	    if (WIFEXITED(status) && WEXITSTATUS(status))
+		  fprintf(stderr, "Child process %d errored running command %d", errno, child_pid);
+
+	    dependency_token *itr = match->head; // decrement its dependents
+	    while(itr != NULL)
+		{
+		  tlc_wrapper_t dependent = itr->tlc;
+		  dependent->nDependsOn--;
+		  if (dependent->nDependsOn == 0) // dependent is free to run
+		  {
+		    pid_t new = fork();
+			if (new == 0)
+			{
+			  execute_command (dependent->command, time_travel);
+			  exit(dependent->command->status);
+			}
+			else
+			  dependent->pid = new;
+		  }
+		  itr = itr->next;
+		}
+		match->pid = 0; // done
+	  }
 	}
   }
 

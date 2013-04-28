@@ -31,6 +31,7 @@ struct tlc_wrapper
     command_t command;
     int nDependsOn;
     dependency_token* head;
+	pid_t pid;
 };
 
 
