@@ -1147,11 +1147,16 @@ output_read_error(int line, token node)
   error(1, 0, "Line %d: syntax '%s'", line, c);
 }
 
-command_t
+tlc_wrapper_t
 read_command_stream (command_stream_t s)
 {
   tlc_wrapper_t c = *(s->it);
   (s->it)++;
-  return !c ? NULL : c->command;
+  return c;
+}
 
+void
+reset_command_stream_itr (command_stream_t s)
+{
+  s->it = s->commands;
 }

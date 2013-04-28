@@ -133,8 +133,10 @@ main (int argc, char **argv)
  
   command_t last_command = NULL;
   command_t command;
-  while ((command = read_command_stream (command_stream))) //PART 1A
+  tlc_wrapper_t tlc;
+  while ((tlc = read_command_stream (command_stream))) //PART 1A
   {
+	command = tlc->command;
     if (print_tree)
 	{
 	  printf ("# %d\n", command_number++);
