@@ -4,16 +4,30 @@
 #include <stdio.h>
 
 typedef struct command *command_t;
+typedef struct tlc_wrapper *tlc_wrapper_t;
 typedef struct command_stream *command_stream_t;
 typedef struct token token;
 typedef struct token_node token_node;
 
 struct command_stream
 {
-  command_t* commands;
-  command_t* it;
+  tlc_wrapper_t* commands;
+  tlc_wrapper_t* it;
   int size;
 };
+
+typedef struct
+{
+    command_t command;
+    int nDependsOn;
+    dependency_token* head;
+} tlc_wrapper;
+
+typedef struct 
+{
+    tlc_wrapper* tlc;
+    dependency_token* next;
+}dependency_token;
 
 typedef struct 
 {
