@@ -8,3 +8,11 @@ We are unaware of any known limitations of our code.
 
 We tokenize the input commands and do syntax checking at a token level. We then
 transform the tokens into the appropriate commands.
+
+Lab 1b
+
+There are no limitations on the execution of commands. Parallelization has yet 
+to be implemented.
+
+We made execute-command a recursive function that uses fork() and execvp(). We
+used pipe() to handle pipe commands.
