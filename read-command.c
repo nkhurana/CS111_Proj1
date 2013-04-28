@@ -174,7 +174,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	top_level_command_t c = isSanitized_token_stream(head);
     
     int max_numberOfCommands = 100;
-	cstream->commands = (tlc_wrapper_t) checked_malloc(max_numberOfCommands*sizeof(tlc_wrapper_t));
+	cstream->commands = (tlc_wrapper_t *) checked_malloc(max_numberOfCommands*sizeof(tlc_wrapper_t));
 	
 	//=========Changes the tokens into commands============//
     for (i = 0; i < c.size; i++)
@@ -201,6 +201,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
           cstream->commands = checked_realloc(cstream->commands, (max_numberOfCommands*sizeof(tlc_wrapper_t)));
       }
 	}
+	
 	(cstream->commands)[cstream->size] = NULL;
 	cstream->it = cstream->commands;
     
@@ -755,7 +756,7 @@ isSanitized_token_stream (token_node* head)
 		  while(itr2->m_token.type == NEWLINE_TOKEN)
 		    itr2 = itr2->next;
 		  
-		  if (itr2->m_token.type == WORD_TOKEN || itr2->m_token.type == LEFT_PAREN_TOKEN);
+		  if (itr2->m_token.type == WORD_TOKEN || itr2->m_token.type == LEFT_PAREN_TOKEN)
 		    it->m_token.type = SEMICOLON_TOKEN;
 		}
 		
@@ -917,5 +918,5 @@ read_command_stream (command_stream_t s)
 {
   tlc_wrapper_t c = *(s->it);
   (s->it)++;
-  return c->command;
+  return !c ? NULL : c->command;
 }
