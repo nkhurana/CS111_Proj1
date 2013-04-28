@@ -1,8 +1,3 @@
-(a&&b || 
-
-
-
-
-
-
-b)
+echo foo
+echo bar
+echo hi

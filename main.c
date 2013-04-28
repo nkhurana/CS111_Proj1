@@ -75,13 +75,13 @@ free_command(command_t c)
 }
 
 void
-free_tlc_dependencies(tlc_wrapper *tlc)
+free_tlc_dependencies(tlc_wrapper_t tlc)
 {
   free_command(tlc->command);
   dependency_token *itr = tlc->head;
   while(itr != NULL)
   {
-    temp = itr;
+    dependency_token* temp = itr;
 	itr = itr->next;
 	free (temp);
   }

@@ -4,10 +4,11 @@
 #include <stdio.h>
 
 typedef struct command *command_t;
-typedef struct tlc_wrapper *tlc_wrapper_t;
+typedef struct tlc_wrapper* tlc_wrapper_t;
 typedef struct command_stream *command_stream_t;
 typedef struct token token;
 typedef struct token_node token_node;
+typedef struct dependency_token dependency_token;
 
 struct command_stream
 {
@@ -16,18 +17,20 @@ struct command_stream
   int size;
 };
 
-typedef struct
+struct dependency_token
+{
+    tlc_wrapper_t tlc;
+    dependency_token* next;
+};
+
+
+struct tlc_wrapper
 {
     command_t command;
     int nDependsOn;
     dependency_token* head;
-} tlc_wrapper;
+};
 
-typedef struct 
-{
-    tlc_wrapper* tlc;
-    dependency_token* next;
-}dependency_token;
 
 typedef struct 
 {
