@@ -1,5 +1,7 @@
 // UCLA CS 111 Lab 1 command internals
 
+
+
 enum command_type
   {
     AND_COMMAND,         // A && B
@@ -21,7 +23,10 @@ struct command
   // I/O redirections, or null if none.
   char *input;
   char *output;
-
+    
+  read_dependency_node* read_head;
+  write_dependency_node* write_head;
+    
   union
   {
     // for AND_COMMAND, SEQUENCE_COMMAND, OR_COMMAND, PIPE_COMMAND:
@@ -50,6 +55,19 @@ typedef enum {
     COMMENT_TOKEN,
     PIPE_TOKEN,
 } token_type;
+
+struct read_dependency_node
+{
+    struct read_dependency_node* next;
+    char* read_word;
+};
+
+struct write_dependency_node
+{
+    struct write_dependency_node* next;
+    char* write_word;
+};
+
 
 struct token{
   token_type type;

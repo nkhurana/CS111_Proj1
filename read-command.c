@@ -223,6 +223,8 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
+        command->read_head=NULL;
+        command->write_head=NULL;
         command->u.word = checked_malloc(sizeof(char*)*2);
         *(command->u.word) = head->m_token.word;
         (command->u.word)[1] = NULL;
@@ -321,17 +323,7 @@ command_t CreateCommand(token_node* head, token_node* tail)
         itr = itr->next;
     }
     
-    //SUBSHELL case
-    if ((SubshellSpotted) && (!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&& (!ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token))
-    {
-        command_t command = checked_malloc(sizeof(struct command));
-        command->type = SUBSHELL_COMMAND;
-        command->status=-1;
-        command->input = NULL;
-        command->output=NULL;
-        command->u.subshell_command = CreateCommand(head->next,tail->previous);
-        return command;
-    }
+
     
     
     //BASE CASE: simple command is multiple words
@@ -343,18 +335,42 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
+        command->read_head=NULL;
+        read_dependency_node* rdn_ptr;
+        command->write_head=NULL;
 		
         command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordNodes+1));
+        
         itr = head;
         int index = 0;
+        bool notFirstLoop=false;;
     
         while ((itr != tail->next))
         {
             if (itr->m_token.type == WORD_TOKEN)
             {
                 (command->u.word)[index++] = itr->m_token.word;
-                //puts(itr->m_token.word);
-                //puts("\n");
+                if (notFirstLoop)
+                {
+                    if (!(command->read_head))
+                    {
+                        read_dependency_node* node = checked_malloc(sizeof(read_dependency_node));
+                        node->next=NULL;
+                        node->read_word=itr->m_token.word;
+                        command->read_head = node;
+                    }
+                    else 
+                    {
+                        rdn_ptr= command->read_head;
+                        while (rdn_ptr->next!=NULL)
+                            rdn_ptr=rdn_ptr->next;
+                        read_dependency_node* node= checked_malloc(sizeof(read_dependency_node));
+                        node->next=NULL;
+                        node->read_word=itr->m_token.word;
+                        rdn_ptr->next=node;
+                    }
+                }
+                notFirstLoop=true;
             }
             itr = itr->next;
         }
@@ -391,6 +407,13 @@ command_t CreateCommand(token_node* head, token_node* tail)
             command->u.subshell_command=CreateCommand(itr_To_Left_Paren->next, ptr_to_LESSTHAN_Token->previous->previous);
             command->output = NULL;
             command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
+            
+            //make read_dependency list
+            command->read_head=checked_malloc(sizeof(read_dependency_node));
+            command->read_head->read_word=ptr_to_LESSTHAN_Token->next->m_token.word;
+            command->read_head->next=command->u.subshell_command->read_head;
+            command->write_head=NULL;
+            
             return command;
             
         }
@@ -399,25 +422,42 @@ command_t CreateCommand(token_node* head, token_node* tail)
             command_t command = checked_malloc(sizeof(struct command));
             command->type = SIMPLE_COMMAND;
             command->status = -1;
+            read_dependency_node* rdn_ptr;
+            command->write_head=NULL;
+            
+            command->read_head=checked_malloc(sizeof(read_dependency_node));
+            command->read_head->next=NULL;
+            command->read_head->read_word=ptr_to_LESSTHAN_Token->next->m_token.word;
         
             command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordsBeforeRedirection+1));
             itr = head;
             int index = 0;
+            bool notFirstLoop=false;
         
             while ((itr != ptr_to_LESSTHAN_Token))
             {
                 if (itr->m_token.type == WORD_TOKEN)
                 {
                     (command->u.word)[index++] = itr->m_token.word;
-                    //puts(itr->m_token.word);
-                    //puts("\n");
+                    if (notFirstLoop)
+                    {
+                        rdn_ptr= command->read_head;
+                        while (rdn_ptr->next!=NULL)
+                            rdn_ptr=rdn_ptr->next;
+                        read_dependency_node* node= checked_malloc(sizeof(read_dependency_node));
+                        node->next=NULL;
+                        node->read_word=itr->m_token.word;
+                        rdn_ptr->next=node;
+                    }
+                    notFirstLoop=true;
+                
                 }
                 itr = itr->next;
             }
             //printf("index #:%i \n", index);
             (command->u.word)[index] = NULL;
             command->output = NULL;
-        
+            
             command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
             return command;
         }
@@ -445,6 +485,15 @@ command_t CreateCommand(token_node* head, token_node* tail)
             command->u.subshell_command=CreateCommand(itr_To_Left_Paren->next, ptr_to_GREATERTHAN_Token->previous->previous);
             command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
             command->input = NULL;
+            
+            //make read_dependency list
+            command->read_head=command->u.subshell_command->read_head;
+            
+            //make write dependency list
+            command->write_head=checked_malloc(sizeof(write_dependency_node));
+            command->write_head->write_word=ptr_to_GREATERTHAN_Token->next->m_token.word;
+            command->write_head->next=command->u.subshell_command->write_head;
+            
             return command;
             
         }
@@ -452,18 +501,42 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command_t command = checked_malloc(sizeof(struct command));
         command->type = SIMPLE_COMMAND;
         command ->status = -1;
+        command->read_head=NULL;
+        read_dependency_node* rdn_ptr;
         
         command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordsBeforeRedirection+1));
         itr = head;
         int index = 0;
+        bool notFirstLoop=false;
         
         while ((itr != ptr_to_GREATERTHAN_Token))
         {
             if (itr->m_token.type == WORD_TOKEN)
             {
                 (command->u.word)[index++] = itr->m_token.word;
-                //puts(itr->m_token.word);
-                //puts("\n");
+                if (notFirstLoop)
+                {
+                    
+                    if (!(command->read_head))
+                    {
+                        read_dependency_node* node = checked_malloc(sizeof(read_dependency_node));
+                        node->next=NULL;
+                        node->read_word=itr->m_token.word;
+                        command->read_head = node;
+                    }
+                    else 
+                    {
+                        rdn_ptr= command->read_head;
+                        while (rdn_ptr->next!=NULL)
+                            rdn_ptr=rdn_ptr->next;
+                        read_dependency_node* node= checked_malloc(sizeof(read_dependency_node));
+                        node->next=NULL;
+                        node->read_word=itr->m_token.word;
+                        rdn_ptr->next=node;
+                    }
+                }
+            notFirstLoop=true;
+
             }
             itr = itr->next;
         }
@@ -471,6 +544,12 @@ command_t CreateCommand(token_node* head, token_node* tail)
         (command->u.word)[index] = NULL;
         command ->input = NULL;
         command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
+        
+        //make write dependency list
+        command->write_head=checked_malloc(sizeof(write_dependency_node));
+        command->write_head->write_word=ptr_to_GREATERTHAN_Token->next->m_token.word;
+        command->write_head->next=NULL;
+        
         return command;
         
     }
@@ -497,6 +576,18 @@ command_t CreateCommand(token_node* head, token_node* tail)
             command->u.subshell_command=CreateCommand(itr_To_Left_Paren->next, ptr_to_LESSTHAN_Token->previous->previous);
             command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
             command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
+            
+            //make read_dependency list
+            command->read_head=checked_malloc(sizeof(read_dependency_node));
+            command->read_head->read_word=ptr_to_LESSTHAN_Token->next->m_token.word;
+            command->read_head->next=command->u.subshell_command->read_head;
+            
+            //make write dependency list
+            command->write_head=checked_malloc(sizeof(write_dependency_node));
+            command->write_head->write_word=ptr_to_GREATERTHAN_Token->next->m_token.word;
+            command->write_head->next=command->u.subshell_command->write_head;
+            
+            
             return command;
             
         }
@@ -505,17 +596,35 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->type = SIMPLE_COMMAND;
         command ->status = -1;
         
+        read_dependency_node* rdn_ptr;
+        
+        command->read_head=checked_malloc(sizeof(read_dependency_node));
+        command->read_head->next=NULL;
+        command->read_head->read_word=ptr_to_LESSTHAN_Token->next->m_token.word;
+
+        
         command->u.word = (char**)checked_malloc((sizeof(char*))*(numWordsBeforeRedirection+1));
         itr = head;
         int index = 0;
+        bool notFirstLoop=false;
         
         while ((itr != ptr_to_LESSTHAN_Token))
         {
             if (itr->m_token.type == WORD_TOKEN)
             {
                 (command->u.word)[index++] = itr->m_token.word;
-                //puts(itr->m_token.word);
-                //puts("\n");
+                if (notFirstLoop)
+                {
+                    rdn_ptr= command->read_head;
+                    while (rdn_ptr->next!=NULL)
+                        rdn_ptr=rdn_ptr->next;
+                    read_dependency_node* node= checked_malloc(sizeof(read_dependency_node));
+                    node->next=NULL;
+                    node->read_word=itr->m_token.word;
+                    rdn_ptr->next=node;
+                }
+                notFirstLoop=true;
+                
             }
             itr = itr->next;
         }
@@ -523,6 +632,12 @@ command_t CreateCommand(token_node* head, token_node* tail)
         (command->u.word)[index] = NULL;
         command->input = ptr_to_LESSTHAN_Token->next->m_token.word;
         command->output = ptr_to_GREATERTHAN_Token->next->m_token.word;
+        
+        //make write dependency list
+        command->write_head=checked_malloc(sizeof(write_dependency_node));
+        command->write_head->write_word=ptr_to_GREATERTHAN_Token->next->m_token.word;
+        command->write_head->next=NULL;
+        
         return command;
         
     }
@@ -538,6 +653,33 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->output=NULL;
         command->u.command[0] = CreateCommand(head, ptr_to_SEMICOLON_Token->previous);
         command->u.command[1] = CreateCommand(ptr_to_SEMICOLON_Token->next,tail);
+        
+        //create read_dependency list
+        command->read_head=command->u.command[0]->read_head;
+        if (command->read_head)
+        {
+            read_dependency_node* itr = command->read_head;
+            while (itr->next!=NULL)
+                itr=itr->next;
+            itr->next=command->u.command[1]->read_head;
+        }
+        else {
+            command->read_head=command->u.command[1]->read_head;
+        }
+        
+        //create write dependency list
+        command->write_head=command->u.command[0]->write_head;
+        if (command->write_head)
+        {
+            write_dependency_node* w_itr = command->write_head;
+            while (w_itr->next!=NULL)
+                w_itr=w_itr->next;
+            w_itr->next=command->u.command[1]->write_head;
+        }
+        else{
+            command->write_head=command->u.command[1]->write_head;
+        }
+        
         return command;
         
     }
@@ -554,6 +696,33 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->output=NULL;
         command->u.command[0] = CreateCommand(head, ptr_to_PIPE_Token->previous);
         command->u.command[1] = CreateCommand(ptr_to_PIPE_Token->next,tail);
+        
+        //create read_dependency list
+        command->read_head=command->u.command[0]->read_head;
+        if (command->read_head)
+        {
+            read_dependency_node* itr = command->read_head;
+            while (itr->next!=NULL)
+                itr=itr->next;
+            itr->next=command->u.command[1]->read_head;
+        }
+        else {
+            command->read_head=command->u.command[1]->read_head;
+        }
+        
+        //create write dependency list
+        command->write_head=command->u.command[0]->write_head;
+        if (command->write_head)
+        {
+            write_dependency_node* w_itr = command->write_head;
+            while (w_itr->next!=NULL)
+                w_itr=w_itr->next;
+            w_itr->next=command->u.command[1]->write_head;
+        }
+        else{
+            command->write_head=command->u.command[1]->write_head;
+        }
+        
         return command;
         
         
@@ -568,11 +737,35 @@ command_t CreateCommand(token_node* head, token_node* tail)
         command->status=-1;
         command->input = NULL;
         command->output=NULL;
-        
-        
-        
         command->u.command[0] = CreateCommand(head, ptr_to_AND_Token->previous);
         command->u.command[1] = CreateCommand(ptr_to_AND_Token->next,tail);
+        
+        //create read_dependency list
+        command->read_head=command->u.command[0]->read_head;
+        if (command->read_head)
+        {
+            read_dependency_node* itr = command->read_head;
+            while (itr->next!=NULL)
+                itr=itr->next;
+            itr->next=command->u.command[1]->read_head;
+        }
+        else {
+            command->read_head=command->u.command[1]->read_head;
+        }
+        
+        //create write dependency list
+        command->write_head=command->u.command[0]->write_head;
+        if (command->write_head)
+        {
+            write_dependency_node* w_itr = command->write_head;
+            while (w_itr->next!=NULL)
+                w_itr=w_itr->next;
+            w_itr->next=command->u.command[1]->write_head;
+        }
+        else{
+            command->write_head=command->u.command[1]->write_head;
+        }
+        
         return command;
     }
     
@@ -587,8 +780,48 @@ command_t CreateCommand(token_node* head, token_node* tail)
         
         command->u.command[0] = CreateCommand(head, ptr_to_OR_Token->previous);
         command->u.command[1] = CreateCommand(ptr_to_OR_Token->next,tail);
+        //create read_dependency list
+        command->read_head=command->u.command[0]->read_head;
+        if (command->read_head)
+        {
+            read_dependency_node* itr = command->read_head;
+            while (itr->next!=NULL)
+                itr=itr->next;
+            itr->next=command->u.command[1]->read_head;
+        }
+        else {
+            command->read_head=command->u.command[1]->read_head;
+        }
+        
+        //create write dependency list
+        command->write_head=command->u.command[0]->write_head;
+        if (command->write_head)
+        {
+            write_dependency_node* w_itr = command->write_head;
+            while (w_itr->next!=NULL)
+                w_itr=w_itr->next;
+            w_itr->next=command->u.command[1]->write_head;
+        }
+        else{
+            command->write_head=command->u.command[1]->write_head;
+        }
+        
         return command;
     }
+    //SUBSHELL case
+    if ((SubshellSpotted) && (!ptr_to_AND_Token) && (!ptr_to_OR_Token) && (!ptr_to_PIPE_Token)&& (!ptr_to_LESSTHAN_Token) && (!ptr_to_GREATERTHAN_Token))
+    {
+        command_t command = checked_malloc(sizeof(struct command));
+        command->type = SUBSHELL_COMMAND;
+        command->status=-1;
+        command->input = NULL;
+        command->output=NULL;
+        command->u.subshell_command = CreateCommand(head->next,tail->previous);
+        command->read_head = command->u.subshell_command->read_head;
+        command->write_head=command->u.subshell_command->write_head;
+        return command;
+    }
+    
     return NULL;
 }
 

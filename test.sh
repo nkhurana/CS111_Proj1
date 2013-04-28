@@ -1,3 +1,1 @@
-echo foo
-echo bar
-echo hi
+(sort <a | cat b - | tr A-Z a-z) <ss > c

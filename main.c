@@ -138,7 +138,25 @@ main (int argc, char **argv)
     if (print_tree)
 	{
 	  printf ("# %d\n", command_number++);
-	  print_command (command);
+	  //print_command (command);
+       puts("READ DEPENDNECY");
+        puts("---------------");
+        read_dependency_node* itr=command->read_head;
+        while (itr!=NULL)
+        {
+            puts(itr->read_word);
+            itr=itr->next;
+        }
+        puts("");
+        puts("Write DEPENDNECY");
+        puts("---------------");
+        write_dependency_node* w_itr=command->write_head;
+         while (w_itr!=NULL)
+         {
+         puts(w_itr->write_word);
+         w_itr=w_itr->next;
+         }
+        
 	}
     else
 	{

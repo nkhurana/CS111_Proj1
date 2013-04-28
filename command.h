@@ -9,6 +9,8 @@ typedef struct command_stream *command_stream_t;
 typedef struct token token;
 typedef struct token_node token_node;
 typedef struct dependency_token dependency_token;
+typedef struct read_dependency_node read_dependency_node;
+typedef struct write_dependency_node write_dependency_node;
 
 struct command_stream
 {
