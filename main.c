@@ -199,6 +199,7 @@ main (int argc, char **argv)
   {
 	pid_t child_pid;
 	int status;
+	int n_processes_returned = 0;
 	while(((child_pid = waitpid(-1, &status, 0)) != -1)) // wait for all children
 	{
 	  reset_command_stream_itr(command_stream); // processes don't run in order
@@ -231,9 +232,12 @@ main (int argc, char **argv)
 		    itr = itr->next;
 		  }
 		  match->pid = 0; // done
+		  n_processes_returned++;
 		}
 	  }
 	}
+	if (n_processes_returned != command_stream->size)
+	  error(1, 0, "Not all processes returned");
   }
 
   free_token_stream();
