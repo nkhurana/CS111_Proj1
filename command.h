@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <sys/wait.h>
 
 typedef struct command *command_t;
 typedef struct tlc_wrapper* tlc_wrapper_t;
@@ -60,6 +61,8 @@ top_level_command_t isSanitized_token_stream (token_node* head);
 void remove_newline_tokens(top_level_command c);
 
 void output_read_error(int line, token node);
+
+void reset_command_stream_itr(command_stream_t s);
 
 /* Create a command stream from GETBYTE and ARG.  A reader of
    the command stream will invoke GETBYTE (ARG) to get the next byte.

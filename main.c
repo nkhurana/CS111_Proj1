@@ -5,6 +5,8 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <fnctl.h>
 
 #include "command.h"
 #include "command-internals.h"
@@ -193,40 +195,43 @@ main (int argc, char **argv)
 	}
   }
   
-  pid_t child_pid;
-  int status;
-  while((child_pid == waitpid(-1, &status, 0))) // wait for all children
+  if (time_travel)
   {
-    reset_command_stream_itr(command_stream); // processes don't run in order
-	tlc_wrapper_t match;
-	int errno = 0;
-    while((match = read_command_stream(command_stream)))
+	pid_t child_pid;
+	int status;
+	while((child_pid == waitpid(-1, &status, 0))) // wait for all children
 	{
-	  errno++;
-	  if (match->pid = child_pid) // find tlc whose command was run
+	  reset_command_stream_itr(command_stream); // processes don't run in order
+	  tlc_wrapper_t match;
+	  int err_no = 0;
+	  while((match = read_command_stream(command_stream)))
 	  {
-	    if (WIFEXITED(status) && WEXITSTATUS(status))
-		  fprintf(stderr, "Child process %d errored running command %d", errno, child_pid);
+	    errno++;
+	    if (match->pid == child_pid) // find tlc whose command was run
+	    {
+	  	  if (WIFEXITED(status) && WEXITSTATUS(status))
+		    fprintf(stderr, "Child process %d errored running command %d", errno, child_pid);
 
-	    dependency_token *itr = match->head; // decrement its dependents
-	    while(itr != NULL)
-		{
-		  tlc_wrapper_t dependent = itr->tlc;
-		  dependent->nDependsOn--;
-		  if (dependent->nDependsOn == 0) // dependent is free to run
+		  dependency_token *itr = match->head; // decrement its dependents
+		  while(itr != NULL)
 		  {
-		    pid_t new = fork();
-			if (new == 0)
-			{
-			  execute_command (dependent->command, time_travel);
-			  exit(dependent->command->status);
+		    tlc_wrapper_t dependent = itr->tlc;
+		    dependent->nDependsOn--;
+		    if (dependent->nDependsOn == 0) // dependent is free to run
+		    {
+			  pid_t new = fork();
+		   	  if (new == 0)
+			  {
+			    execute_command (dependent->command, time_travel);
+			    exit(dependent->command->status);
+			  }
+			  else
+			    dependent->pid = new;
 			}
-			else
-			  dependent->pid = new;
+		    itr = itr->next;
 		  }
-		  itr = itr->next;
+		  match->pid = 0; // done
 		}
-		match->pid = 0; // done
 	  }
 	}
   }
