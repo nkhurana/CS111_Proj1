@@ -223,6 +223,7 @@ main (int argc, char **argv)
 			  pid_t new = fork();
 		   	  if (new == 0)
 			  {
+			    last_command = dependent->command;
 			    execute_command (dependent->command, time_travel);
 			    exit(dependent->command->status);
 			  }
