@@ -199,7 +199,7 @@ main (int argc, char **argv)
   {
 	pid_t child_pid;
 	int status;
-	while((child_pid == waitpid(-1, &status, 0))) // wait for all children
+	while(((child_pid = waitpid(-1, &status, 0)) != -1)) // wait for all children
 	{
 	  reset_command_stream_itr(command_stream); // processes don't run in order
 	  tlc_wrapper_t match;
