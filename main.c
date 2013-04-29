@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
-#include <fnctl.h>
+#include <unistd.h>
 
 #include "command.h"
 #include "command-internals.h"
@@ -210,7 +210,7 @@ main (int argc, char **argv)
 	    if (match->pid == child_pid) // find tlc whose command was run
 	    {
 	  	  if (WIFEXITED(status) && WEXITSTATUS(status))
-		    fprintf(stderr, "Child process %d errored running command %d", errno, child_pid);
+		    fprintf(stderr, "Child process %d errored running command %d", err_no, child_pid);
 
 		  dependency_token *itr = match->head; // decrement its dependents
 		  while(itr != NULL)
