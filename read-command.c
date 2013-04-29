@@ -206,6 +206,10 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	(cstream->commands)[cstream->size] = NULL;
 	cstream->it = cstream->commands;
     
+    //===============Create Dependencies==================================//
+    CreateDependenciesinCommandStream(cstream);
+    reset_command_stream_itr(cstream);
+    
     return cstream;
 }
 
@@ -1160,3 +1164,102 @@ reset_command_stream_itr (command_stream_t s)
 {
   s->it = s->commands;
 }
+
+void CreateDependenciesinCommandStream(command_stream_t c_stream)
+{
+    reset_command_stream_itr(c_stream);
+    tlc_wrapper_t external_tlc_itr;
+    tlc_wrapper_t internal_tlc_itr;
+    while ((external_tlc_itr = read_command_stream(c_stream)))
+    {
+        //move onto next external iterator since no dependencies from this one
+        if (!external_tlc_itr->command->write_head && !external_tlc_itr->command->read_head) 
+            break; 
+        
+        internal_tlc_itr = *(c_stream->it);
+        int i = 0;
+        
+        while (internal_tlc_itr)
+        {
+            i++;
+            
+            write_dependency_node* external_write_itr = external_tlc_itr->command->write_head;
+            read_dependency_node* external_read_itr = external_tlc_itr->command->read_head;
+            bool dependencyFound=false;
+
+            read_dependency_node* internal_read_itr;
+            write_dependency_node* internal_write_itr; 
+
+            //check external read/write WITH internal read/write
+            while ((external_write_itr || external_read_itr) && (!dependencyFound))
+            {
+                internal_read_itr = internal_tlc_itr->command->read_head;
+                internal_write_itr = internal_tlc_itr->command->write_head;
+                while((internal_read_itr || internal_write_itr) && (!dependencyFound))
+                {
+                                        
+                    if (external_write_itr&& internal_read_itr)
+                    {
+                        if ((strcmp(external_write_itr->write_word,internal_read_itr->read_word))==0)
+                            dependencyFound=true;
+                    }
+                    
+                    if (external_write_itr && internal_write_itr)
+                    {
+                        if ((strcmp(external_write_itr->write_word,internal_write_itr->write_word))==0)
+                            dependencyFound=true;
+                    }
+                    
+                    if (external_read_itr && internal_write_itr)
+                    {
+                        if ((strcmp(external_read_itr->read_word,internal_write_itr->write_word))==0)
+                            dependencyFound=true;
+                    }
+                    
+                    
+                    if (dependencyFound)
+                    {
+                        
+                        internal_tlc_itr->nDependsOn++;
+                        //add internal_tlc_itr to dependency list
+                        if (external_tlc_itr->head)
+                        {
+                            dependency_token* d_itr = external_tlc_itr->head;
+                            while (d_itr->next!=NULL)
+                                   d_itr=d_itr->next;
+                            d_itr->next=checked_malloc(sizeof(dependency_token));
+                            d_itr->next->tlc=internal_tlc_itr;
+                            d_itr->next->next=NULL;
+                        }
+                        else 
+                        {
+                            external_tlc_itr->head=checked_malloc(sizeof(dependency_token));
+                            external_tlc_itr->head->tlc=internal_tlc_itr;
+                            external_tlc_itr->head->next=NULL;
+                        }
+                        
+                    }
+                    if (internal_read_itr)
+                        internal_read_itr=internal_read_itr->next;
+                    if (internal_write_itr)
+                        internal_write_itr=internal_write_itr->next;
+                                                                  
+                }
+                if (external_write_itr)
+                    external_write_itr=external_write_itr->next;
+                if (external_read_itr)
+                    external_read_itr=external_read_itr->next;
+            }
+            internal_tlc_itr = *((c_stream->it)+i);
+        }
+
+                                                            
+    }
+    
+}
+
+
+
+
+
+

@@ -15,6 +15,7 @@ command_indented_print (int indent, command_t c)
     case SEQUENCE_COMMAND:
     case OR_COMMAND:
     case PIPE_COMMAND:
+            
       {
 	command_indented_print (indent + 2 * (c->u.command[0]->type != c->type),
 				c->u.command[0]);

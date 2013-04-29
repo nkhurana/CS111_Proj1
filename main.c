@@ -136,7 +136,7 @@ main (int argc, char **argv)
   tlc_wrapper_t tlc;
   while ((tlc = read_command_stream (command_stream))) //PART 1A
   {
-	command = tlc->command;
+    command = tlc->command;
     if (print_tree)
 	{
 	  printf ("# %d\n", command_number++);
@@ -158,6 +158,17 @@ main (int argc, char **argv)
          puts(w_itr->write_word);
          w_itr=w_itr->next;
          }
+        puts("");
+        printf("numberofDependencies: %i\n\n\n", tlc->nDependsOn);
+        if (tlc->head)
+        {
+            dependency_token* itr = tlc->head;
+            while (itr)
+            {
+                print_command(itr->tlc->command);
+                itr=itr->next;
+            }
+        }
         
 	}
     else

@@ -49,6 +49,8 @@ typedef struct
 
 command_t CreateCommand(token_node* head, token_node* tail);
 
+void CreateDependenciesinCommandStream(command_stream_t c_stream);
+
 bool isValidCharacterForWordToken(char character);
 
 char* ReadFileIntoCharacterBuffer (int (*get_next_byte) (void *), void *get_next_byte_argument, int* bufferEndIndex);

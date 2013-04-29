@@ -1,1 +1,3 @@
-(sort <a | cat b - | tr A-Z a-z) <ss > c
+echo foo > a
+sort a
+sort a b
