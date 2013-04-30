@@ -16,3 +16,15 @@ to be implemented.
 
 We made execute-command a recursive function that uses fork() and execvp(). We
 used pipe() to handle pipe commands.
+
+Lab 1c
+
+We parallelized every top level command:
+	1. We build dependencies in order of the commands for each of these cases
+		1st command Read - 2nd Write
+		1st Write - 2nd Read
+		1st Write - 1st Write
+	2. We first let loose all commands with no dependencies
+	3. Whenever a command finishes (a child returns), we notify all its dependents
+	4. When a dependent has no more dependencies, we run it immediately
+	5. We stall main until all commands are run (all child processes return)
