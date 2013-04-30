@@ -156,7 +156,12 @@ main (int argc, char **argv)
   command_t last_command = NULL;
   command_t command;
   tlc_wrapper_t tlc;
-  
+  if (time_travel)
+  {
+      //===============Create Dependencies==================================//
+      CreateDependenciesinCommandStream(cstream);
+      reset_command_stream_itr(cstream);
+  }
     
   while ((tlc = read_command_stream (command_stream))) //PART 1A
   {
