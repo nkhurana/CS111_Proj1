@@ -74,9 +74,15 @@ free_command(command_t c)
 	 break;
 	}
   }
-  if (read_head)
+}
+
+void
+free_tlc_dependencies(tlc_wrapper_t tlc)
+{
+  command_t c = tlc->command;
+  if (c->read_head)
   {
-    read_dependency_node* itr = read_head;
+    read_dependency_node* itr = c->read_head;
 	while (itr != NULL)
 	{
 	  read_dependency_node* temp = itr;
@@ -84,9 +90,9 @@ free_command(command_t c)
 	  free(temp);
 	}
   }
-  if (write_head)
+  if (c->write_head)
   {
-    write_dependency_node* itr = write_head;
+    write_dependency_node* itr = c->write_head;
 	while (itr != NULL)
 	{
 	  write_dependency_node* temp = itr;
@@ -94,12 +100,7 @@ free_command(command_t c)
 	  free(temp);
 	}
   }
-}
-
-void
-free_tlc_dependencies(tlc_wrapper_t tlc)
-{
-  free_command(tlc->command);
+  free_command(c);
   dependency_token *itr = tlc->head;
   while(itr != NULL)
   {
