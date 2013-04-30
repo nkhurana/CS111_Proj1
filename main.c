@@ -160,8 +160,8 @@ main (int argc, char **argv)
   if (time_travel)
   {
       //===============Create Dependencies==================================//
-      CreateDependenciesinCommandStream(cstream);
-      reset_command_stream_itr(cstream);
+      CreateDependenciesinCommandStream(command_stream);
+      reset_command_stream_itr(command_stream);
   }
     
   while ((tlc = read_command_stream (command_stream))) //PART 1A
