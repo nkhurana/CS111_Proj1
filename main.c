@@ -74,6 +74,26 @@ free_command(command_t c)
 	 break;
 	}
   }
+  if (read_head)
+  {
+    read_dependency_node* itr = read_head;
+	while (itr != NULL)
+	{
+	  read_dependency_node* temp = itr;
+	  itr = itr->next;
+	  free(temp);
+	}
+  }
+  if (write_head)
+  {
+    write_dependency_node* itr = write_head;
+	while (itr != NULL)
+	{
+	  write_dependency_node* temp = itr;
+	  itr = itr->next;
+	  free(temp);
+	}
+  }
 }
 
 void
@@ -204,15 +224,10 @@ main (int argc, char **argv)
 	{
 	  reset_command_stream_itr(command_stream); // processes don't run in order
 	  tlc_wrapper_t match;
-	  int err_no = 0;
 	  while((match = read_command_stream(command_stream)))
 	  {
-	    errno++;
 	    if (match->pid == child_pid) // find tlc whose command was run
 	    {
-	  	  if (WIFEXITED(status) && WEXITSTATUS(status))
-		    fprintf(stderr, "Child process %d errored running command %d", err_no, child_pid);
-
 		  dependency_token *itr = match->head; // decrement its dependents
 		  while(itr != NULL)
 		  {
