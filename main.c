@@ -156,46 +156,20 @@ main (int argc, char **argv)
   command_t last_command = NULL;
   command_t command;
   tlc_wrapper_t tlc;
+  
+    
   while ((tlc = read_command_stream (command_stream))) //PART 1A
   {
     command = tlc->command;
     if (print_tree)
 	{
 	  printf ("# %d\n", command_number++);
-	  //print_command (command);
-       puts("READ DEPENDNECY");
-        puts("---------------");
-        read_dependency_node* itr=command->read_head;
-        while (itr!=NULL)
-        {
-            puts(itr->read_word);
-            itr=itr->next;
-        }
-        puts("");
-        puts("Write DEPENDNECY");
-        puts("---------------");
-        write_dependency_node* w_itr=command->write_head;
-         while (w_itr!=NULL)
-         {
-         puts(w_itr->write_word);
-         w_itr=w_itr->next;
-         }
-        puts("");
-        printf("numberofDependencies: %i\n\n\n", tlc->nDependsOn);
-        if (tlc->head)
-        {
-            dependency_token* itr = tlc->head;
-            while (itr)
-            {
-                print_command(itr->tlc->command);
-                itr=itr->next;
-            }
-        }
-        
-	}
+	  print_command (command);
+    }
     else
 	{
-	  last_command = command;
+	  
+      last_command = command;
 	  if (!time_travel)
 	    execute_command (command, time_travel);
 	  else // time_travel!

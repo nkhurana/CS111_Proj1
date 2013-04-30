@@ -206,9 +206,7 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	(cstream->commands)[cstream->size] = NULL;
 	cstream->it = cstream->commands;
     
-    //===============Create Dependencies==================================//
-    CreateDependenciesinCommandStream(cstream);
-    reset_command_stream_itr(cstream);
+
     
     return cstream;
 }
@@ -1178,14 +1176,16 @@ void CreateDependenciesinCommandStream(command_stream_t c_stream)
         
         internal_tlc_itr = *(c_stream->it);
         int i = 0;
+
         
         while (internal_tlc_itr)
         {
             i++;
             
+            bool dependencyFound=false;
+            
             write_dependency_node* external_write_itr = external_tlc_itr->command->write_head;
             read_dependency_node* external_read_itr = external_tlc_itr->command->read_head;
-            bool dependencyFound=false;
 
             read_dependency_node* internal_read_itr;
             write_dependency_node* internal_write_itr; 

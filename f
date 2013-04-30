@@ -1,23 +1,5 @@
-1,2c1
-< 1
-< 2
+1c1,2
+< Nicky went to the bookstore to read some books!
 ---
-> 
-4d2
-< 5
-6,7d3
-< 7
-< 8
-9c5,7
-< 1
----
-> 2
-> 3
-> 3
-10a9
-> 5
-12c11,12
-< 
----
-> 7
-> 8
+> bar
+> nicky went to the bookstore to read some books!
