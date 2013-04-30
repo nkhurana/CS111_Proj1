@@ -891,7 +891,7 @@ isSanitized_token_stream (token_node* head)
 	  case (SEMICOLON_TOKEN):
 	  {
 	    if (next_type != WORD_TOKEN && next_type != LEFT_PAREN_TOKEN
-		      && next_type != NEWLINE_TOKEN)
+		      && next_type != NEWLINE_TOKEN && next_type != RIGHT_PAREN_TOKEN)
 		  output_read_error(line, next_token);
 		  
 		if (top_level && it->m_token.type == SEMICOLON_TOKEN)
