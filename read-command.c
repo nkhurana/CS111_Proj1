@@ -206,8 +206,6 @@ command_stream_t make_command_stream (int (*get_next_byte) (void *),void *get_ne
 	(cstream->commands)[cstream->size] = NULL;
 	cstream->it = cstream->commands;
     
-
-    
     return cstream;
 }
 
@@ -857,8 +855,10 @@ isSanitized_token_stream (token_node* head)
 	
   token_node *it = head;
   
-  while (it->m_token.type == NEWLINE_TOKEN)
+  while (it != NULL && it->m_token.type == NEWLINE_TOKEN)
 	it = it->next;
+  if (it == NULL)
+    return c;
 	
   token_node *command_begin = it;
   while (it->next != NULL)
@@ -910,7 +910,7 @@ isSanitized_token_stream (token_node* head)
 		  c.size++;
 
 		  command_begin = it->next;
-		  while (command_begin->m_token.type == NEWLINE_TOKEN)
+		  while (command_begin != NULL && command_begin->m_token.type == NEWLINE_TOKEN)
 		    command_begin = command_begin->next;
 		}
 		break;
@@ -983,16 +983,16 @@ isSanitized_token_stream (token_node* head)
 		  c.size++;
 		   
 		  command_begin = it->next;
-		  while (command_begin->m_token.type == NEWLINE_TOKEN)
+		  while (command_begin != NULL && command_begin->m_token.type == NEWLINE_TOKEN)
 		    command_begin = command_begin->next;
 		}
 		else if (!top_level && (prev_type == WORD_TOKEN || prev_type == RIGHT_PAREN_TOKEN))
 		{
 		  token_node* itr2 = it->next;
-		  while(itr2->m_token.type == NEWLINE_TOKEN)
+		  while(itr2 != NULL && itr2->m_token.type == NEWLINE_TOKEN)
 		    itr2 = itr2->next;
 		  
-		  if (itr2->m_token.type == WORD_TOKEN || itr2->m_token.type == LEFT_PAREN_TOKEN)
+		  if (itr2 != NULL && (itr2->m_token.type == WORD_TOKEN || itr2->m_token.type == LEFT_PAREN_TOKEN))
 		    it->m_token.type = SEMICOLON_TOKEN;
 		}
 		
@@ -1014,7 +1014,7 @@ isSanitized_token_stream (token_node* head)
 	if (last_type != SEMICOLON_TOKEN && last_type != NEWLINE_TOKEN 
 			  && last_type != RIGHT_PAREN_TOKEN)
 	  output_read_error(line, it->m_token);
-	else
+	else if (command_begin != NULL)
 	{ 
 	  top_level_command new;
 	  new.head = command_begin;
@@ -1176,16 +1176,14 @@ void CreateDependenciesinCommandStream(command_stream_t c_stream)
         
         internal_tlc_itr = *(c_stream->it);
         int i = 0;
-
         
         while (internal_tlc_itr)
         {
             i++;
             
-            bool dependencyFound=false;
-            
             write_dependency_node* external_write_itr = external_tlc_itr->command->write_head;
             read_dependency_node* external_read_itr = external_tlc_itr->command->read_head;
+            bool dependencyFound=false;
 
             read_dependency_node* internal_read_itr;
             write_dependency_node* internal_write_itr; 
