@@ -1,2 +1,2 @@
 (echo foo;echo bar)> b
-sort b
+(cat b; cat b;)
