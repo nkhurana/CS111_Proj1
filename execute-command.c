@@ -107,22 +107,43 @@ execute_command (command_t c, bool time_travel)
         }
         case SUBSHELL_COMMAND:
         {
-            if (c->input)
-            {
-                int fdi = open(c->input, O_RDONLY);
-                if (dup2(fdi, STDIN_FILENO) != STDIN_FILENO)
-                    perror("Unable to redirect input");
-                close(fdi);
-            }
-            if (c->output)
-            {
-                int fdo = open(c->output, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-                if (dup2(fdo, STDOUT_FILENO) != STDOUT_FILENO)
-                    perror("Unable to redirect output");
-                close(fdo);
-            }
-            execute_command(c->u.subshell_command, time_travel);
-            c->status = c->u.subshell_command->status;
+			pid_t pid;
+			int status;
+			
+			switch (pid = fork())
+			{
+				case -1:
+					perror("Unable to fork");
+					exit(EXIT_FAILURE);
+				case 0:
+					if (c->input)
+					{
+						int fdi = open(c->input, O_RDONLY);
+						if (dup2(fdi, STDIN_FILENO) != STDIN_FILENO)
+							perror("Unable to redirect input");
+						close(fdi);
+					}
+					if (c->output)
+					{
+						int fdo = open(c->output, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+						if (dup2(fdo, STDOUT_FILENO) != STDOUT_FILENO)
+							perror("Unable to redirect output");
+						close(fdo);
+					}
+					execute_command(c->u.subshell_command, time_travel);
+					exit(c->u.subshell_command->status);
+				default:
+					if (waitpid(pid, &status, 0) < 0)
+					{
+						perror("Waiting on child produced error");
+						exit(EXIT_FAILURE);
+					}
+					
+					if (WIFEXITED(status))
+					{
+						c->status = WEXITSTATUS(status);
+					}
+			}
             break;
         }
         case SIMPLE_COMMAND:
