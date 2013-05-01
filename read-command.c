@@ -891,9 +891,14 @@ isSanitized_token_stream (token_node* head)
 	  case (SEMICOLON_TOKEN):
 	  {
 	    if (next_type != WORD_TOKEN && next_type != LEFT_PAREN_TOKEN
-		      && next_type != NEWLINE_TOKEN && next_type != RIGHT_PAREN_TOKEN)
-		  output_read_error(line, next_token);
-		  
+		      && next_type != NEWLINE_TOKEN)
+		{
+		  if (it->m_token.type != SEMICOLON_TOKEN)
+		    output_read_error(line, next_token);
+		  else if (next_type != RIGHT_PAREN_TOKEN)
+		    output_read_error(line, next_token);
+		}
+		
 		if (top_level && it->m_token.type == SEMICOLON_TOKEN)
 		{
 		  top_level_command new;
@@ -912,6 +917,14 @@ isSanitized_token_stream (token_node* head)
 		  command_begin = it->next;
 		  while (command_begin != NULL && command_begin->m_token.type == NEWLINE_TOKEN)
 		    command_begin = command_begin->next;
+		}
+		else if (!top_level && it->m_token.type == SEMICOLON_TOKEN && next_type == RIGHT_PAREN_TOKEN)
+		{
+		  token_node* temp = it;
+		  it = it->previous;
+		  it->next = temp->next;
+		  temp->next->previous = it;
+		  free(temp);
 		}
 		break;
 	  }
