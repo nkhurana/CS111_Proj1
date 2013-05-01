@@ -278,7 +278,11 @@ command_t CreateCommand(token_node* head, token_node* tail)
             
             if (itr->m_token.type==SEMICOLON_TOKEN)
             {
-                ptr_to_SEMICOLON_Token=itr;
+                if (itr->next)
+                {
+                    if (itr->next->m_token.type!=RIGHT_PAREN_TOKEN)
+                        ptr_to_SEMICOLON_Token=itr;
+                }
             }
         
         
